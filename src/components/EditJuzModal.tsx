@@ -15,7 +15,7 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
     const { user } = useAuth();
 
     // Initialize selection state based on existing juz data
-    const [selectionType, setSelectionType] = useState<'juz' | 'surah'>(juz.type || (juz.surahId ? 'surah' : 'juz'));
+    const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page'>(juz.type || (juz.surahId ? 'surah' : 'juz'));
     const [juzNo, setJuzNo] = useState(juz.juzNo || 1);
     const [selectedSurahId, setSelectedSurahId] = useState(juz.surahId || 0);
     const [searchQuery, setSearchQuery] = useState('');
