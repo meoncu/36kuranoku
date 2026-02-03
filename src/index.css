@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap');
+
+@layer base {
+  :root {
+    --mushaf-font: 'Diyanet Hamdullah', 'Scheherazade New', serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+@font-face {
+  font-family: 'Diyanet Abay';
+  src: url('https://webdosya.diyanet.gov.tr/kuran/kuranikerim/dosyalar/font/KuranKerimFontAbay.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Diyanet Hamdullah';
+  src: url('https://webdosya.diyanet.gov.tr/kuran/kuranikerim/dosyalar/font/KuranKerimFontHamdullah.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Diyanet Latif';
+  src: url('https://webdosya.diyanet.gov.tr/kuran/kuranikerim/dosyalar/font/KuranKerimFontLatif.ttf') format('truetype');
+  font-display: swap;
+}
+
+.font-mushaf {
+  font-family: var(--mushaf-font);
+  direction: rtl;
+  font-weight: 400;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  word-spacing: 1.2rem;
+}
+
+.mushaf-paper {
+  @apply relative bg-[#FEF7E6] dark:bg-[#151514] text-[#1a1a1a] dark:text-[#e5e5e5] transition-colors duration-500 overflow-hidden;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.08),
+    0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E8DFCA;
+}
+
+/* Decorative rosette for verse ends */
+.rosette-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 1.2em;
+  height: 1.2em;
+  margin: 0 0.5rem;
+  vertical-align: middle;
+}
+
+.rosette-shape {
+  position: absolute;
+  inset: 0.1em;
+  border: 2px solid #BC8D4E;
+  /* Diyanet gülü rengi */
+  border-radius: 50%;
+  background: #BC8D4E;
+  opacity: 0.9;
+}
+
+.rosette-number {
+  position: relative;
+  z-index: 10;
+  font-family: var(--mushaf-font);
+  font-size: 0.4em;
+  font-weight: bold;
+  color: white;
+  /* Numara artık kahverengi zemin üzerinde beyaz */
+  line-height: 1;
+}
+
+.mushaf-line span {
+  text-shadow: 0.2px 0.2px 0px rgba(0, 0, 0, 0.02);
+}
+
+.glass-card {
+  @apply bg-card backdrop-blur-md border border-white/10 shadow-xl;
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium transition-all hover:opacity-90 active:scale-95 disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground px-6 py-3 rounded-lg font-medium transition-all hover:opacity-90 active:scale-95;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* Mushaf specific justification */
+.mushaf-line {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+  line-height: 2.8;
+  font-feature-settings: "kern" 1, "calt" 1;
+}
+
+/* Surah header styling */
+.surah-header {
+  @apply flex flex-col items-center justify-center py-6 my-4 border-2 border-primary/20 rounded-xl bg-primary/5 font-bold;
+}

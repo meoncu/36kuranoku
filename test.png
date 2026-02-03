@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+    <meta charset="utf-8" />
+    <meta name="author" content="Bilgi Yönetimi ve İletişim Daire Başkanlığı "/>
+    <meta name="content-language" content="tr-TR"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="copyright" content="(c) 2016 Bilgi Yönetimi ve İletişim Daire Başkanlığı."/>
+    <meta name="description" content="Diyanet İşleri Başkanlığı&#39;nın Resmi Kur&#39;an-ı Kerim Sayfasıdır."/>
+    <meta name="keywords" />
+    <meta name="distribution" content="global" />
+    
+    <meta name="reply-to" content="mushaf@diyanet.gov.tr" />
+    <meta name="robots" content="all" />
+    <meta name="title" content="Diyanet İşleri Başkanlığı Kur'an-ı Kerim - Kur&#39;an-ı Kerim  - Diyanet İşleri Başkanlığı '" />
+
+    <meta name="viewport" content="width=device-width"/>
+    <title>Kur&#39;an-ı Kerim  - Diyanet İşleri Başkanlığı </title>
+
+    <link href="/Content/css/bootstrap.css" rel="stylesheet"/>
+    <link href="/Content/fonts/font-awesome.css" rel="stylesheet"/>
+    <link href="/Content/css/Site.css?v=639057123321006636" rel="stylesheet"/>
+
+    <script src="/scripts/jquery-1.9.1.min.js"></script>
+    <script src="/scripts/bootstrap.min.js"></script>
+
+   <script>
+  var _paq = window._paq = window._paq || [];
+  /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+  _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="https://webanaliz.diyanet.gov.tr/";
+    _paq.push(['setTrackerUrl', u+'matomo.php']);
+    _paq.push(['setSiteId', '6']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.async=true; g.src=u+'matomo.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+
+</head>
+<body>
+<section class="main-wrapper">
+    
+<header id="mainHeader" class="main-header">
+    <div class="container">
+        <!-- Desktop Layout: Logo ve Navbar aynı satırda -->
+        <div class="row header-main-row hidden-xs mx-3">
+            <!-- Logo Section -->
+            <div class="col-md-3 col-sm-12 logo-section">
+                <a href="/" title="Anasayfa" class="logo-link">
+                    <img src="/Content/img/dib.png" alt="Kur'an-ı Kerim - Diyanet İşleri Başkanlığı" class="logo-img" />
+                    <div class="logo-text">
+                        <span>Diyanet İşleri Başkanlığı</span>
+                        <span>Kur'an-ı Kerim</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Navbar Section -->
+            <div class="col-md-9 col-sm-12 navbar-section">
+                <nav class="navbar navbar-default main-nav">
+                    <div class="container-fluid">
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                        <div class="navbar-collapse">
+                            <ul class="nav navbar-nav navbar-right">
+                                <li class="active">
+                                    <a href="/" title="Anasayfa">Anasayfa</a>
+                                </li>
+                                <li class="">
+                                    <a href="/Kutuphane">K&#252;t&#252;phane</a>
+                                </li>
+                                <li class="">
+                                    <a href="/MultiMedya">Dijital İ&#231;erikler</a>
+                                </li>
+                                <li class="">
+                                    <a href="/Yayinlar">Yayınlarımız</a>
+                                </li>
+                            </ul>
+                        </div><!-- /.navbar-collapse -->
+                    </div><!-- /.container-fluid -->
+                </nav>
+            </div>
+        </div>
+
+        <!-- Mobile Layout: Optimized for mobile -->
+        <div class="mobile-header visible-xs">
+            <div class="mobile-header-top">
+                <!-- Logo Section Mobile -->
+                <div class="mobile-logo-section">
+                    <a href="/" title="Anasayfa" class="mobile-logo-link">
+                        <img src="/Content/img/dib.png" alt="Kur'an-ı Kerim - Diyanet İşleri Başkanlığı" class="mobile-logo-img" />
+                        <div class="logo-text">
+                            <span>Diyanet İşleri Başkanlığı</span>
+                            <span>Kur'an-ı Kerim</span>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Mobile Menu Toggle -->
+                <div class="mobile-menu-toggle">
+                    <button type="button" class="mobile-navbar-toggle" data-toggle="collapse" data-target="#mobile-navbar-collapse" aria-expanded="false">
+                        <span class="sr-only">Menüyü Aç/Kapat</span>
+                        <span class="mobile-icon-bar"></span>
+                        <span class="mobile-icon-bar"></span>
+                        <span class="mobile-icon-bar"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div class="collapse mobile-navbar-collapse" id="mobile-navbar-collapse">
+                <nav class="mobile-nav">
+                    <ul class="mobile-nav-list">
+                        <li class="mobile-nav-item active">
+                            <a href="/" class="mobile-nav-link">Anasayfa</a>
+                        </li>
+                        <li class="mobile-nav-item ">
+                            <a class="mobile-nav-link" href="/Kutuphane">K&#252;t&#252;phane</a>
+                        </li>
+                        <li class="mobile-nav-item ">
+                            <a class="mobile-nav-link" href="/MultiMedya">Dijital İ&#231;erikler</a>
+                        </li>
+                        <li class="mobile-nav-item ">
+                            <a class="mobile-nav-link" href="/Yayinlar">Yayınlarımız</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+    <section id="mainContent" class="main-content">
+        <div class="container">
+            <div class="content">
+                
+
+
+
+
+<div class="">
+
+    <!-- Slider Section - Ortada -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="slider-container">
+                <div id="my-carousel" class="carousel slide custom-carousel" data-ride="carousel" data-interval="4000">
+                    <!-- Wrapper for slides -->
+                    <div class="carousel-inner" role="listbox">
+                        <!-- Resim 1 -->
+                        <div class="item active">
+                            <img alt="Hediyem Kur'an Olsun" src="/Content/img/slider/hediyem_kuran_olsun.png" class="img-responsive">
+                        </div>
+                        <!-- Resim 2 -->
+                        <div class="item">
+                            <a href="https://www.youtube.com/playlist?list=PLbxwMdSNkTauJdKskkVznM4fV3aErgPJf" title="Ok Takip" target="_blank" class="slider-link">
+                                <img alt="Ok Takip" src="/Content/img/slider/ok_takip.png" class="img-responsive">
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Controls - Her zaman görünür -->
+                    <a class="left carousel-control custom-carousel-control" href="#my-carousel" role="button" data-slide="prev">
+                        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="right carousel-control custom-carousel-control" href="#my-carousel" role="button" data-slide="next">
+                        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+
+                    <!-- Indicators - Slider'ın altında -->
+                    <ol class="carousel-indicators custom-carousel-indicators">
+                        <li data-target="#my-carousel" data-slide-to="0" class="active"></li>
+                        <li data-target="#my-carousel" data-slide-to="1"></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Menu Section - Slider'ın altında -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="bottom-menu-section">
+                
+
+<script src="/scripts/portalHomePage.js"></script>
+<div class="slider-bottom-buttons">
+    <div class="button-container">
+
+        <!-- Kuran-ı Kerim Button 
+        <a href="http://kuran.diyanet.gov.tr/mushaf"  class="slider-card" title="Kur'an-ı Kerim">
+            <div class="rightmenu-card-icon-wrapper">
+                <div class="rightmenu-card-icon">
+                    <img src="~/Content/img/kuran.svg" alt="Kur'an-ı Kerim" />
+                </div>
+            </div>
+            <div class="card-content">
+                <h4>Kur'an-ı Kerim</h4>
+                <h4>(Versiyon 1)</h4>
+                <p>Kur'an-ı Kerim Oku ve Dinle</p>
+            </div>
+        </a>
+        -->
+        
+        <!-- Yeni Kuran-ı Kerim Button -->
+        <a href="https://kuran.diyanet.gov.tr/mushaf_v2"  class="slider-card" title="Kur'an-ı Kerim">
+            <div class="rightmenu-card-icon-wrapper">
+                <div class="rightmenu-card-icon">
+                    <img src="/Content/img/kuran_yeni.png" alt="Kur'an-ı Kerim" />
+                </div>
+                <div class="new-badge">
+                    <span>YENİ</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <h4>Kur'an-ı Kerim</h4>
+                <p>Yeni özellikleri deneyimleyin</p>
+            </div>
+        </a>
+
+        <!-- Elifba Button -->
+        <a href="https://kuran.diyanet.gov.tr/elifba" class="slider-card" title="Elifba">
+            <div class="rightmenu-card-icon-wrapper">
+                <div class="rightmenu-card-icon">
+                    <img src="/Content/img/vav-elif.svg" alt="Elifba" />
+                </div>
+            </div>
+            <div class="card-content">
+                <h4>Elifba</h4>
+                <p>Kur'an okumaya giriş ve Tecvid uygulamaları</p>
+            </div>
+        </a>
+
+
+        <!-- Tefsir Button -->
+        <a href="/Tefsir/" class="slider-card" title="Tefsir">
+            <div class="rightmenu-card-icon-wrapper">
+                <div class="rightmenu-card-icon">
+                    <img src="/Content/img/tefsir.svg" alt="Tefsir" />
+                </div>
+            </div>
+            <div class="card-content">
+                <h4>Tefsir</h4>
+                <p>Kur'an Yolu Meali ve Tefsiri</p>
+            </div>
+        </a>
+
+        <!-- Kuran Sözlüğü Button -->
+        <a href="/KuranSozlugu/" class="slider-card" title="Kur'an Sözlüğü">
+            <div class="rightmenu-card-icon-wrapper">
+                <div class="rightmenu-card-icon">
+                    <img src="/Content/img/sozluk.svg" alt="Kur'an Sözlüğü" />
+                </div>
+            </div>
+            <div class="card-content">
+                <h4>Kur'an Sözlüğü</h4>
+                <p>Kur'an Terimleri Sözlüğü</p>
+            </div>
+        </a>
+
+        <a href="https://www.youtube.com/playlist?list=PLbxwMdSNkTauJdKskkVznM4fV3aErgPJf" id="downloadLink" class="slider-card" title="Uygulamayı İndir">
+            <div class="rightmenu-card-icon-wrapper">
+                <div class="rightmenu-card-icon">
+                    <img src="/Content/img/youtube.svg" alt="Ok Takip" />
+                </div>
+            </div>
+            <div class="card-content">
+                <h4>Ok Takip</h4>
+                <p>Ok Takipli Hatim</p>
+            </div>
+        </a>
+       
+    </div>
+</div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Slider CSS - Link stilleri ve boyut düzeltmeleri -->
+<style>
+.slider-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.slider-link:hover {
+    text-decoration: none;
+}
+
+.slider-link img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.carousel-inner {
+    cursor: pointer;
+}
+</style>
+
+<!-- Slider JavaScript - Otomatik geçiş ve touch desteği -->
+<script>
+$(document).ready(function() {
+    // Slider'ı başlat
+    $('#my-carousel').carousel({
+        interval: 4000, // 4 saniye
+        pause: "hover", // Mouse üzerine gelince dur
+        wrap: true, // Sonsuz döngü
+        keyboard: true // Klavye ile kontrol
+    });
+    
+    var carousel = $('#my-carousel');
+    
+    // Klavye kontrolleri
+    $(document).on('keydown', function(e) {
+        if (e.keyCode === 37) { // Sol ok
+            carousel.carousel('prev');
+        } else if (e.keyCode === 39) { // Sağ ok
+            carousel.carousel('next');
+        }
+    });
+    
+    // Slider'ın otomatik başlamasını sağla
+    setTimeout(function() {
+        carousel.carousel('cycle');
+    }, 1000);
+});
+</script>
+
+
+
+
+
+
+
+
+
+
+
+            </div>
+            <!-- Uygulamalar ve Yayınlar bölümleri footer'a taşındı -->
+        </div>
+    </section>
+
+
+    <footer id="mainFooter" class="main-footer">
+    <div class="container">
+        <div class="row">
+            <!-- Diyanet Logosu ve Açıklama -->
+            <div class="col-lg-4 col-md-4">
+                <div class="footer-logo-section">
+                    <a href="https://www.diyanet.gov.tr" target="_blank" rel="noopener noreferrer">
+                        <img src="/Content/img/dib.png" alt="Diyanet İşleri Başkanlığı" class="footer-logo"/>
+                    </a>
+                    <div class="footer-description">
+                        <h4 class="footer-heading">Kur'an-ı Kerim Portalı</h4>
+                        <p>
+                            Diyanet İşleri Başkanlığı Kur'an-ı Kerim Portalında Kur'an hakkında istediğiniz bilgilere ulaşabilirsiniz.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+              <!-- Sesli ve Görüntülü Yayınlar -->
+            <div class="col-lg-4 col-md-4">
+                <h4 class="footer-heading">Sesli ve Görüntülü Yayınlar</h4>
+                <ul class="footer-broadcasts-list">
+                    <li class="footer-broadcast-item">
+                        <a href="https://diyanet.tv/" class="footer-broadcast-link" target="_blank">
+                            <img src="/Content/img/diyanet_tv_logo.png" alt="Diyanet TV" class="footer-broadcast-icon" />
+                            <span>Diyanet TV</span>
+                        </a>
+                    </li>
+                    <li class="footer-broadcast-item">
+                        <a href="https://www.diyanethaber.com.tr/" class="footer-broadcast-link" target="_blank">
+                            <img src="/Content/img/diyanet_haber_logo.png" alt="Diyanet Haber" class="footer-broadcast-icon" />
+                            <span>Diyanet Haber</span>
+                        </a>
+                    </li>
+                    <li class="footer-broadcast-item">
+                        <a href="https://diyanetradyo.com/" class="footer-broadcast-link" target="_blank">
+                            <img src="/Content/img/diyanet_radyo_logo.png" alt="Diyanet Radyo" class="footer-broadcast-icon" />
+                            <span>Diyanet Radyo</span>
+                        </a>
+                    </li>
+                    <li class="footer-broadcast-item">
+                        <a href="https://diyanetkuranradyo.com/" class="footer-broadcast-link" target="_blank">
+                            <img src="/Content/img/diyanet_kuran_radyo_logo.png" alt="Diyanet Kur'an Radyo" class="footer-broadcast-icon" />
+                            <span>Diyanet Kur'an Radyo</span>
+                        </a>
+                    </li>
+                    <li class="footer-broadcast-item">
+                        <a href="https://dijital.diyanet.gov.tr/" class="footer-broadcast-link" target="_blank">
+                            <img src="/Content/img/diyanet_dijital_logo.png" alt="Diyanet Yayınları" class="footer-broadcast-icon" />
+                            <span>Diyanet Dijital</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Kur'an-ı Kerim Uygulamalarımız -->
+            <div class="col-lg-4 col-md-4">
+                <h4 class="footer-heading">Mobil ve Masaüstü Uygulamalarımız</h4>
+                <ul class="footer-apps-list">
+                    <li class="footer-app-item">
+                        <a href="https://apps.apple.com/tr/app/e-diyanet/id6745179920?l=tr" class="footer-app-link" target="_blank">
+                            <img src="/Content/img/ios.svg" alt="iOS" class="footer-app-icon" />
+                            <span>iOS Uygulaması</span>
+                        </a>
+                    </li>
+                    <li class="footer-app-item">
+                        <a href="https://play.google.com/store/apps/details?id=tr.gov.diyanet.mobileapp.dib&hl=tr" class="footer-app-link" target="_blank">
+                            <img src="/Content/img/android.svg" alt="Android" class="footer-app-icon" />
+                            <span>Android Uygulaması</span>
+                        </a>
+                    </li>
+                    <li class="footer-app-item">
+                        <a href="https://webdosya.diyanet.gov.tr/kuran/kuranikerim/download/Diyanet_Kurani_Kerim_3.0.exe" class="footer-app-link" target="_blank">
+                            <img src="/Content/img/windows.svg" alt="Windows" class="footer-app-icon" />
+                            <span>Windows Uygulaması</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+</section>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-3381057-2"></script>
+    <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-3381057-2');
+    </script>
+
+    <noscript><p><img referrerpolicy="no-referrer-when-downgrade" src="https://webanaliz.diyanet.gov.tr/matomo.php?idsite=6&amp;rec=1" style="border:0;" alt="" /></p></noscript>
+</body>
+</html>
