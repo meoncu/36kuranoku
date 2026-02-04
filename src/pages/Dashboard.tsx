@@ -306,7 +306,12 @@ export default function Dashboard() {
                                                         <Calendar className="w-6 h-6" />
                                                     </div>
                                                     <div>
-                                                        <h3 className="text-white font-bold text-lg">{juz.title}</h3>
+                                                        <div className="flex items-center gap-3">
+                                                            <h3 className="text-white font-bold text-lg">{juz.title}</h3>
+                                                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-white/40 text-[10px] font-bold uppercase tracking-wider">
+                                                                {now.toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}
+                                                            </span>
+                                                        </div>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <span className="text-white/60 text-xs font-medium">Bu Ayın Hedefi:</span>
                                                             <span className="bg-white/10 px-2 py-0.5 rounded text-white text-xs font-bold">{targetPage}. Sayfalar</span>

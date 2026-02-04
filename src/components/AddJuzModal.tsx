@@ -12,7 +12,7 @@ interface AddJuzModalProps {
 export default function AddJuzModal({ onClose }: AddJuzModalProps) {
     const { user } = useAuth();
     const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page'>('juz');
-    const [juzNo, setJuzNo] = useState(1);
+    const [selectedJuzs, setSelectedJuzs] = useState<number[]>([1]); // Changed from single number to array
     const [selectedSurahId, setSelectedSurahId] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -29,79 +29,133 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
     const [targetDate, setTargetDate] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const toggleJuzSelection = (juz: number) => {
+        setSelectedJuzs(prev => {
+            if (prev.includes(juz)) return prev.filter(n => n !== juz);
+            return [...prev, juz].sort((a, b) => a - b);
+        });
+    };
+
+    const handleSelectAll = () => {
+        setSelectedJuzs(Array.from({ length: 30 }, (_, i) => i + 1));
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
 
         setLoading(true);
         try {
-            let totalPages = 20;
-            let startPage = (juzNo - 1) * 20 + 2;
-            let endPage = startPage + 19;
-            let finalTitle = title || `${juzNo}. Cüz`;
-            let surahId = 0;
-            let currentAssignedPage = 0;
-            let currentStartMonth = '';
-            let currentMonthlyProgress = {};
+            const promises = [];
 
-            if (selectionType === 'surah') {
+            if (selectionType === 'juz') {
+                if (selectedJuzs.length === 0) {
+                    alert("Lütfen en az bir cüz seçiniz.");
+                    setLoading(false);
+                    return;
+                }
+
+                // Create a doc for EACH selected juz
+                for (const jNo of selectedJuzs) {
+                    let startPage = (jNo === 1) ? 1 : ((jNo - 1) * 20) + 2;
+                    let endPage = startPage + 19;
+
+                    // Smart Title Logic
+                    // If user wrote "Ramazan", it becomes "Ramazan - 5. Cüz"
+                    // If title is empty, it becomes "5. Cüz"
+                    let finalTitle = title ? `${title} (${jNo}. Cüz)` : `${jNo}. Cüz`;
+
+                    promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
+                        type: 'juz',
+                        juzNo: jNo,
+                        surahId: 0,
+                        title: finalTitle,
+                        toplamSayfa: 20,
+                        startPage: startPage,
+                        endPage: endPage,
+                        baslangicTarihi: serverTimestamp(),
+                        hedefBitisTarihi: targetDate ? new Date(targetDate) : null,
+                        okunanSayfalar: [],
+                        durum: 'devam-ediyor',
+                        assignedBy: assignedBy,
+                        notes: notes,
+                        createdAt: serverTimestamp()
+                    }));
+                }
+            } else if (selectionType === 'surah') {
                 const surah = CHAPTERS.find(c => c.id === selectedSurahId);
                 const nextSurah = CHAPTERS.find(c => c.id === selectedSurahId + 1);
 
-                if (!surah) return;
+                if (surah) {
+                    let startPage = surah.startPage;
+                    let endPage = nextSurah ? nextSurah.startPage - 1 : 604;
+                    let totalPages = (endPage - startPage) + 1;
+                    let finalTitle = title || `${surah.name} Suresi`;
 
-                startPage = surah.startPage;
-                endPage = nextSurah ? nextSurah.startPage - 1 : 604;
-                totalPages = (endPage - startPage) + 1;
-
-                finalTitle = title || `${surah.name} Suresi`;
-                surahId = surah.id;
+                    promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
+                        type: 'surah',
+                        juzNo: 0,
+                        surahId: surah.id,
+                        title: finalTitle,
+                        toplamSayfa: totalPages,
+                        startPage: startPage,
+                        endPage: endPage,
+                        baslangicTarihi: serverTimestamp(),
+                        hedefBitisTarihi: targetDate ? new Date(targetDate) : null,
+                        okunanSayfalar: [],
+                        durum: 'devam-ediyor',
+                        assignedBy: assignedBy,
+                        notes: notes,
+                        createdAt: serverTimestamp()
+                    }));
+                }
             } else if (selectionType === 'monthly_page') {
-                // Monthly Page Tracking Setup
-                currentAssignedPage = assignedPage;
-                currentStartMonth = startMonth;
-
-                finalTitle = title || `Aylık Cüz Takibi (${assignedPage}. Sayfa)`;
-                totalPages = 30; // 30 Juzs to read per month
-                startPage = 0; // Not applicable in standard linear sense
-                endPage = 0;
-            } else {
-                // Juz 1 starts at 1
-                if (juzNo === 1) startPage = 1;
+                let finalTitle = title || `Aylık Cüz Takibi (${assignedPage}. Sayfa)`;
+                promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
+                    type: 'monthly_page',
+                    juzNo: 0,
+                    surahId: 0,
+                    title: finalTitle,
+                    toplamSayfa: 30, // 30 Juzs
+                    startPage: 0,
+                    endPage: 0,
+                    baslangicTarihi: serverTimestamp(),
+                    hedefBitisTarihi: targetDate ? new Date(targetDate) : null,
+                    okunanSayfalar: [],
+                    durum: 'devam-ediyor',
+                    assignedBy: assignedBy,
+                    notes: notes,
+                    createdAt: serverTimestamp(),
+                    assignedPage: assignedPage,
+                    startMonth: startMonth,
+                    monthlyProgress: {}
+                }));
             }
 
-            await addDoc(collection(db, 'users', user.uid, 'juzler'), {
-                type: selectionType,
-                juzNo: selectionType === 'juz' ? juzNo : 0,
-                surahId: surahId,
-                title: finalTitle,
-                toplamSayfa: totalPages,
-                startPage: startPage,
-                endPage: endPage,
-                baslangicTarihi: serverTimestamp(),
-                hedefBitisTarihi: targetDate ? new Date(targetDate) : null,
-                okunanSayfalar: [], // For monthly, this might track total distinct pages read or remain unused
-                durum: 'devam-ediyor',
-                assignedBy: assignedBy,
-                notes: notes,
-                createdAt: serverTimestamp(),
-                // Unique fields for monthly_page
-                assignedPage: currentAssignedPage,
-                startMonth: currentStartMonth,
-                monthlyProgress: currentMonthlyProgress
-            });
+            await Promise.all(promises);
 
             onClose();
             // Reset form
             setTitle('');
             setNotes('');
             setAssignedBy('');
+            setSelectedJuzs([1]);
         } catch (error) {
             console.error("Error adding tracker:", error);
             alert("Eklenirken bir hata oluştu.");
         } finally {
             setLoading(false);
         }
+    };
+
+    const getTitlePlaceholder = () => {
+        if (selectionType === 'juz') {
+            if (selectedJuzs.length === 30) return "Ramazan Hatmi";
+            if (selectedJuzs.length > 1) return `Toplu Takip (${selectedJuzs.length} Cüz)`;
+            return `${selectedJuzs[0] || 1}. Cüz`;
+        }
+        if (selectionType === 'surah') return 'Sure Seçiniz';
+        return `Aylık Takip (${assignedPage}. Sayfa)`;
     };
 
     return (
@@ -140,7 +194,7 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                         <label className="text-sm text-white/50 mb-1 block">Takip İsmi</label>
                         <input
                             type="text"
-                            placeholder={selectionType === 'juz' ? `${juzNo}. Cüz` : selectionType === 'surah' ? 'Sure Seçiniz' : `Aylık Takip (${assignedPage}. Sayfa)`}
+                            placeholder={getTitlePlaceholder()}
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
@@ -148,16 +202,39 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     </div>
 
                     {selectionType === 'juz' && (
-                        <div>
-                            <label className="text-sm text-white/50 mb-1 block">Cüz Numarası</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="30"
-                                value={juzNo}
-                                onChange={(e) => setJuzNo(Number(e.target.value))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
-                            />
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm text-white/50 block">Cüz Numaraları ({selectedJuzs.length} Seçili)</label>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleSelectAll}
+                                        className="text-[10px] bg-[#C59E57]/20 text-[#C59E57] px-2 py-1 rounded hover:bg-[#C59E57] hover:text-white transition-colors"
+                                    >
+                                        Hatim (Hepsi)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedJuzs([])}
+                                        className="text-[10px] bg-white/5 text-white/50 px-2 py-1 rounded hover:bg-white/10 transition-colors"
+                                    >
+                                        Temizle
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-6 gap-2 bg-white/5 p-2 rounded-xl">
+                                {Array.from({ length: 30 }, (_, i) => i + 1).map(jNo => (
+                                    <button
+                                        key={jNo}
+                                        type="button"
+                                        onClick={() => toggleJuzSelection(jNo)}
+                                        className={`aspect-square rounded-lg flex items-center justify-center text-sm font-bold transition-all ${selectedJuzs.includes(jNo) ? 'bg-[#C59E57] text-white shadow-lg scale-105' : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                    >
+                                        {jNo}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
 
