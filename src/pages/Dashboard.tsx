@@ -442,7 +442,9 @@ export default function Dashboard() {
             </div>
 
             {/* PWA Install Banner */}
-            <InstallPWA />
+            {profile?.showInstallBanner !== false && (
+                <InstallPWA />
+            )}
 
             {/* Prayer Times Section */}
             {profile?.showPrayerTimes !== false && (

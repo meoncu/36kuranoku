@@ -26,6 +26,7 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
     const [city, setCity] = useState(profile?.city || 'Ankara');
     const [showPrayerTimes, setShowPrayerTimes] = useState(profile?.showPrayerTimes ?? true);
     const [showResumeReading, setShowResumeReading] = useState(profile?.showResumeReading ?? true);
+    const [showInstallBanner, setShowInstallBanner] = useState(profile?.showInstallBanner ?? true);
     const [loading, setLoading] = useState(false);
 
     const handleSave = async (e: React.FormEvent) => {
@@ -39,6 +40,7 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
                 city,
                 showPrayerTimes,
                 showResumeReading,
+                showInstallBanner,
                 updatedAt: new Date()
             });
             onClose();
@@ -138,6 +140,19 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
                                 <div className={`w-10 h-5 rounded-full transition-all relative ${showResumeReading ? 'bg-primary' : 'bg-white/10'}`}>
                                     <motion.div
                                         animate={{ x: showResumeReading ? 22 : 2 }}
+                                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div
+                                onClick={() => setShowInstallBanner(!showInstallBanner)}
+                                className="flex items-center justify-between cursor-pointer group"
+                            >
+                                <span className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">Yükleme Panelini Göster</span>
+                                <div className={`w-10 h-5 rounded-full transition-all relative ${showInstallBanner ? 'bg-primary' : 'bg-white/10'}`}>
+                                    <motion.div
+                                        animate={{ x: showInstallBanner ? 22 : 2 }}
                                         className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-sm"
                                     />
                                 </div>

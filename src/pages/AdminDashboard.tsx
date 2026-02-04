@@ -286,7 +286,12 @@ export default function AdminDashboard() {
                                             )}
                                             <div>
                                                 <div className="font-bold text-white">{u.displayName || 'İsimsiz'}</div>
-                                                <div className="font-mono text-xs opacity-50">{u.email}</div>
+                                                <div className="font-mono text-xs opacity-50 mb-2">{u.email}</div>
+                                                <div className="flex gap-2">
+                                                    <span title="Namaz Vakitleri" className={`w-2 h-2 rounded-full ${u.showPrayerTimes !== false ? 'bg-blue-500' : 'bg-white/10'}`} />
+                                                    <span title="Kaldığım Yer" className={`w-2 h-2 rounded-full ${u.showResumeReading !== false ? 'bg-[#C59E57]' : 'bg-white/10'}`} />
+                                                    <span title="Yükleme Paneli" className={`w-2 h-2 rounded-full ${u.showInstallBanner !== false ? 'bg-primary' : 'bg-white/10'}`} />
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="p-4">

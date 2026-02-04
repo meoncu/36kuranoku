@@ -36,4 +36,5 @@ export interface UserProfile {
     city?: string; // For prayer times
     showPrayerTimes?: boolean;
     showResumeReading?: boolean;
+    showInstallBanner?: boolean;
 }

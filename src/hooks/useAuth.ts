@@ -29,7 +29,8 @@ export function useAuth() {
                             createdAt: serverTimestamp(),
                             city: 'Ankara',
                             showPrayerTimes: true,
-                            showResumeReading: true
+                            showResumeReading: true,
+                            showInstallBanner: true
                         };
                         await setDoc(userRef, newProfile);
                         setProfile(newProfile);
@@ -55,6 +56,10 @@ export function useAuth() {
                         }
                         if (data.showResumeReading === undefined) {
                             updates.showResumeReading = true;
+                            needsUpdate = true;
+                        }
+                        if (data.showInstallBanner === undefined) {
+                            updates.showInstallBanner = true;
                             needsUpdate = true;
                         }
 
