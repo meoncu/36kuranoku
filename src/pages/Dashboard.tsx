@@ -9,6 +9,7 @@ import AddJuzModal from '../components/AddJuzModal';
 import EditJuzModal from '../components/EditJuzModal';
 import ProfileModal from '../components/ProfileModal';
 import PrayerTimes from '../components/PrayerTimes';
+import InstallPWA from '../components/InstallPWA';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CHAPTERS } from '../constants/chapters';
 
@@ -439,6 +440,9 @@ export default function Dashboard() {
                     <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
                 </button>
             </div>
+
+            {/* PWA Install Banner */}
+            <InstallPWA />
 
             {/* Prayer Times Section */}
             <PrayerTimes city={profile?.city || 'Ankara'} />
