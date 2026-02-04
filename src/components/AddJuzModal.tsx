@@ -66,7 +66,19 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                 for (const jNo of selectedJuzs) {
                     let startPage = (jNo === 1) ? 1 : ((jNo - 1) * 20) + 2;
                     let endPage = startPage + 19;
-                    let finalTitle = title ? `${title} (${jNo}. Cüz)` : `${jNo}. Cüz`;
+
+                    // If user didn't enter a custom title, default to "X. Cüz"
+                    // If user entered a custom title (e.g. "Ramazan"), append " (X. Cüz)"
+                    // UNLESS it is a single selection, then just let the title be what it is or default.
+
+                    let finalTitle;
+                    if (title) {
+                        finalTitle = `${title} (${jNo}. Cüz)`;
+                    } else {
+                        finalTitle = `${jNo}. Cüz`;
+                    }
+
+                    const isGrouped = selectedJuzs.length > 1;
 
                     promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
                         type: 'juz',
@@ -82,7 +94,9 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                         durum: 'devam-ediyor',
                         assignedBy: assignedBy,
                         notes: notes,
-                        createdAt: serverTimestamp()
+                        createdAt: serverTimestamp(),
+                        isGrouped: isGrouped,
+                        groupName: isGrouped ? (title || 'Toplu Takip') : null
                     }));
                 }
             } else if (selectionType === 'surah') {

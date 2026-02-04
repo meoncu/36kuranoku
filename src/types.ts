@@ -20,6 +20,10 @@ export interface Juz {
     assignedPage?: number; // The base assigned page (1-20)
     startMonth?: string; // YYYY-MM starting period
     monthlyProgress?: Record<string, number[]>; // Key: "YYYY-MM", Value: Array of completed Juz numbers (1-30)
+
+    // Grouping Fields
+    isGrouped?: boolean;
+    groupName?: string | null;
 }
 
 export interface UserProfile {

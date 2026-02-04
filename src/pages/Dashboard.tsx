@@ -567,13 +567,20 @@ export default function Dashboard() {
                                 // Default Group
                                 let key = 'ungrouped';
 
-                                // Regex: Matches "Text (1. Cüz)" or "Text (12. Cüz)" etc.
-                                // Capture group 1 is the Title part.
-                                const title = juz.title || '';
-                                const match = title.match(/(.+?)\s*\(\d+\.\s*Cüz\)/i);
+                                // Priority 1: Explicit Group Name (New Logic)
+                                if (juz.groupName) {
+                                    key = juz.groupName;
+                                }
+                                // Priority 2: Regex Matching (Legacy/Fallback Logic)
+                                else {
+                                    // Regex: Matches "Text (1. Cüz)" or "Text (12. Cüz)" etc.
+                                    // Capture group 1 is the Title part.
+                                    const title = juz.title || '';
+                                    const match = title.match(/(.+?)\s*\(\d+\.\s*Cüz\)/i);
 
-                                if (juz.type === 'juz' && match) {
-                                    key = match[1].trim();
+                                    if (juz.type === 'juz' && match) {
+                                        key = match[1].trim();
+                                    }
                                 }
 
                                 if (!acc[key]) acc[key] = [];
