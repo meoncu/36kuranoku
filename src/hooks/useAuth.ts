@@ -27,7 +27,9 @@ export function useAuth() {
                             lastLogin: serverTimestamp(),
                             isApproved: authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com',
                             createdAt: serverTimestamp(),
-                            city: 'Ankara'
+                            city: 'Ankara',
+                            showPrayerTimes: true,
+                            showResumeReading: true
                         };
                         await setDoc(userRef, newProfile);
                         setProfile(newProfile);
@@ -45,6 +47,14 @@ export function useAuth() {
                         }
                         if (data.city === undefined) {
                             updates.city = 'Ankara';
+                            needsUpdate = true;
+                        }
+                        if (data.showPrayerTimes === undefined) {
+                            updates.showPrayerTimes = true;
+                            needsUpdate = true;
+                        }
+                        if (data.showResumeReading === undefined) {
+                            updates.showResumeReading = true;
                             needsUpdate = true;
                         }
 

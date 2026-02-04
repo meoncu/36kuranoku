@@ -34,4 +34,6 @@ export interface UserProfile {
     photoURL: string;
     createdAt: any;
     city?: string; // For prayer times
+    showPrayerTimes?: boolean;
+    showResumeReading?: boolean;
 }

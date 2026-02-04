@@ -24,6 +24,8 @@ const TURKISH_CITIES = [
 export default function ProfileModal({ user, profile, onClose }: ProfileModalProps) {
     const [displayName, setDisplayName] = useState(profile?.displayName || '');
     const [city, setCity] = useState(profile?.city || 'Ankara');
+    const [showPrayerTimes, setShowPrayerTimes] = useState(profile?.showPrayerTimes ?? true);
+    const [showResumeReading, setShowResumeReading] = useState(profile?.showResumeReading ?? true);
     const [loading, setLoading] = useState(false);
 
     const handleSave = async (e: React.FormEvent) => {
@@ -35,6 +37,8 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
             await updateDoc(doc(db, 'users', user.uid), {
                 displayName,
                 city,
+                showPrayerTimes,
+                showResumeReading,
                 updatedAt: new Date()
             });
             onClose();
@@ -107,6 +111,36 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
                                         <option key={c} value={c} className="bg-[#1a1a1a] text-white">{c}</option>
                                     ))}
                                 </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 pt-2 border-t border-white/5">
+                            <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-1">Görünüm Tercihleri</label>
+
+                            <div
+                                onClick={() => setShowPrayerTimes(!showPrayerTimes)}
+                                className="flex items-center justify-between cursor-pointer group"
+                            >
+                                <span className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">Namaz Vakitlerini Göster</span>
+                                <div className={`w-10 h-5 rounded-full transition-all relative ${showPrayerTimes ? 'bg-primary' : 'bg-white/10'}`}>
+                                    <motion.div
+                                        animate={{ x: showPrayerTimes ? 22 : 2 }}
+                                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div
+                                onClick={() => setShowResumeReading(!showResumeReading)}
+                                className="flex items-center justify-between cursor-pointer group"
+                            >
+                                <span className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">Kaldığım Yeri Göster</span>
+                                <div className={`w-10 h-5 rounded-full transition-all relative ${showResumeReading ? 'bg-primary' : 'bg-white/10'}`}>
+                                    <motion.div
+                                        animate={{ x: showResumeReading ? 22 : 2 }}
+                                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-sm"
+                                    />
+                                </div>
                             </div>
                         </div>
 

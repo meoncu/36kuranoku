@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase';
 import { collection, onSnapshot, orderBy, query, limit, collectionGroup, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Users, Activity, BookOpen, ShieldAlert, BadgeCheck, Search, LayoutGrid, List, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Users, Activity, BookOpen, ShieldAlert, BadgeCheck, Search, LayoutGrid, List, CheckCircle, XCircle, Clock, Calendar, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Navigate, useSearchParams } from 'react-router-dom';
 
@@ -13,12 +13,13 @@ export default function AdminDashboard() {
     const [searchParams] = useSearchParams();
 
     // Initialize tab from URL or default to overview
-    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'activity'>(
-        (searchParams.get('tab') as 'overview' | 'users' | 'activity') || 'overview'
+    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'activity' | 'trackers'>(
+        (searchParams.get('tab') as 'overview' | 'users' | 'activity' | 'trackers') || 'overview'
     );
 
     const [users, setUsers] = useState<any[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
+    const [allTrackers, setAllTrackers] = useState<any[]>([]);
     const [stats, setStats] = useState({ totalUsers: 0, totalTrackers: 0, activeToday: 0 });
     const [filter, setFilter] = useState('');
 
@@ -71,9 +72,31 @@ export default function AdminDashboard() {
             }
         );
 
+        // All Trackers Listener
+        const allTrackersQuery = query(
+            collectionGroup(db, 'juzler'),
+            orderBy('createdAt', 'desc')
+        );
+
+        const unsubscribeAllTrackers = onSnapshot(
+            allTrackersQuery,
+            (snapshot) => {
+                const trackerList = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    refPath: doc.ref.path,
+                    ...doc.data()
+                }));
+                setAllTrackers(trackerList);
+            },
+            (err) => {
+                console.error("All Trackers listener error:", err);
+            }
+        );
+
         return () => {
             unsubscribeUsers();
             unsubscribeActivity();
+            unsubscribeAllTrackers();
         };
     }, [user]);
 
@@ -81,12 +104,12 @@ export default function AdminDashboard() {
     useEffect(() => {
         setStats({
             totalUsers: users.length,
-            totalTrackers: activities.length,
+            totalTrackers: allTrackers.length,
             activeToday: activities.filter((a: any) => {
                 return a.updatedAt?.toDate().toDateString() === new Date().toDateString();
             }).length
         });
-    }, [users, activities]);
+    }, [users, activities, allTrackers]);
 
     // Handle Tab Change manually to update URL if needed, but simplistic state is fine for now.
     // Ideally update URL too? Let's keep it simple. Only read on mount.
@@ -157,6 +180,13 @@ export default function AdminDashboard() {
                     >
                         <Activity className="w-4 h-4" />
                         Hareketler
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('trackers')}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'trackers' ? 'bg-primary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                    >
+                        <BookOpen className="w-4 h-4" />
+                        Takipler
                     </button>
                 </div>
             </div>
@@ -306,9 +336,7 @@ export default function AdminDashboard() {
             {activeTab === 'activity' && (
                 <div className="space-y-4">
                     {activities.map((activity, i) => {
-                        // Find user info if available
-                        const pathParts = activity.refPath.split('/');
-                        const userId = pathParts[1]; // users/{uid}/juzler
+                        const userId = activity.refPath.split('/')[1];
                         const userInfo = users.find(u => u.uid === userId);
 
                         return (
@@ -335,21 +363,102 @@ export default function AdminDashboard() {
                                     <p className="text-white/70 text-sm truncate">
                                         <span className="text-[#C59E57] font-medium">{activity.title}</span> üzerinde işlem yaptı.
                                     </p>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-white/50 uppercase tracking-wider">
-                                            {activity.type === 'monthly_page' ? 'Aylık Takip' : activity.type === 'surah' ? 'Sure' : 'Cüz'}
-                                        </span>
-                                        {activity.assignedBy && (
-                                            <span className="text-[10px] text-white/30 flex items-center gap-1">
-                                                <BadgeCheck className="w-3 h-3" />
-                                                {activity.assignedBy}
-                                            </span>
-                                        )}
-                                    </div>
                                 </div>
                             </motion.div>
                         )
                     })}
+                </div>
+            )}
+
+            {/* Trackers Tab */}
+            {activeTab === 'trackers' && (
+                <div className="space-y-6">
+                    <div className="glass-card p-4 rounded-2xl flex items-center gap-4 bg-white/5 border border-white/10">
+                        <Search className="w-5 h-5 text-white/30" />
+                        <input
+                            type="text"
+                            placeholder="Takip veya kullanıcı ara..."
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value)}
+                            className="bg-transparent border-none focus:outline-none text-white w-full placeholder:text-white/30"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {allTrackers
+                            .filter(t => {
+                                const userId = t.refPath.split('/')[1];
+                                const userInfo = users.find(u => u.uid === userId);
+                                const searchStr = (t.title + ' ' + (userInfo?.displayName || '') + ' ' + (userInfo?.email || '')).toLowerCase();
+                                return searchStr.includes(filter.toLowerCase());
+                            })
+                            .map((tracker, i) => {
+                                const userId = tracker.refPath.split('/')[1];
+                                const userInfo = users.find(u => u.uid === userId);
+                                const progress = Math.round((tracker.okunanSayfalar?.length || 0) / (tracker.toplamSayfa || 20) * 100);
+
+                                return (
+                                    <motion.div
+                                        key={tracker.id}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: i * 0.03 }}
+                                        className="glass-card p-5 rounded-3xl border border-white/5 hover:border-primary/20 transition-all group"
+                                    >
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                                    {tracker.type === 'monthly_page' ? <Calendar className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-white font-bold leading-tight">{tracker.title}</h4>
+                                                    <p className="text-white/30 text-[10px] uppercase tracking-wider font-bold">
+                                                        {tracker.type === 'monthly_page' ? 'Aylık Takip' : tracker.type === 'surah' ? 'Sure' : 'Cüz'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-primary font-black text-lg">%{progress}</div>
+                                                <div className="text-white/20 text-[9px] font-bold uppercase">İlerleme</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+                                            {userInfo?.photoURL ? (
+                                                <img src={userInfo.photoURL} className="w-8 h-8 rounded-lg" alt="" />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-lg bg-white/10 grid place-items-center text-white/30">
+                                                    <User className="w-4 h-4" />
+                                                </div>
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-white/80 font-bold text-xs truncate">
+                                                    {userInfo?.displayName || 'İsimsiz'}
+                                                </div>
+                                                <div className="text-white/30 text-[10px] truncate">{userInfo?.email}</div>
+                                            </div>
+                                            {tracker.isArchived && (
+                                                <span className="bg-white/10 text-white/40 px-2 py-0.5 rounded text-[8px] font-bold uppercase">Arşiv</span>
+                                            )}
+                                        </div>
+
+                                        <div className="mt-4 space-y-2">
+                                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
+                                                <span>Okunan: {tracker.okunanSayfalar?.length || 0} Sayfa</span>
+                                                <span>Toplam: {tracker.toplamSayfa || 20}</span>
+                                            </div>
+                                            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${progress}%` }}
+                                                    className="h-full bg-primary"
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })}
+                    </div>
                 </div>
             )}
 

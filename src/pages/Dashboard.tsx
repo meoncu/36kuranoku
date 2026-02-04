@@ -445,7 +445,9 @@ export default function Dashboard() {
             <InstallPWA />
 
             {/* Prayer Times Section */}
-            <PrayerTimes city={profile?.city || 'Ankara'} />
+            {profile?.showPrayerTimes !== false && (
+                <PrayerTimes city={profile?.city || 'Ankara'} />
+            )}
 
             {/* Page Navigation Modal */}
             <AnimatePresence>
@@ -520,7 +522,7 @@ export default function Dashboard() {
             )}
 
             {/* Resume Reading Banner */}
-            {lastActiveJuz && (
+            {profile?.showResumeReading !== false && lastActiveJuz && (
                 <div className="bg-[#C59E57] rounded-3xl p-6 flex items-center justify-between shadow-lg relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:bg-white/20 transition-all" />
                     <div className="relative z-10 flex items-center gap-4">
