@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, where, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
 import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive } from 'lucide-react';
@@ -38,6 +38,60 @@ export default function Dashboard() {
         });
 
         return unsubscribe;
+    }, [user]);
+
+    // Auto-create Monthly Tracker for Admin
+    useEffect(() => {
+        const checkAndCreateMonthlyTracker = async () => {
+            if (!user || user.email !== 'meoncu@gmail.com') return;
+
+            const now = new Date();
+            const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+            // Check if tracker already exists (even if archived)
+            const q = query(
+                collection(db, 'users', user.uid, 'juzler'),
+                where('type', '==', 'monthly_page'),
+                where('startMonth', '==', currentKey)
+            );
+
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) return; // Already exists
+
+            // Create new tracker
+            // Calculation: Base Jan 2026 = 11.
+            // Diff from Jan 2026.
+            const startYear = 2026;
+            const startMonth = 1; // Jan
+            const basePage = 11;
+
+            const diffMonths = (now.getFullYear() - startYear) * 12 + ((now.getMonth() + 1) - startMonth);
+            const targetPage = (((basePage - 1 + diffMonths) % 20) + 20) % 20 + 1;
+
+            // Calculate end of month
+            const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+            try {
+                await addDoc(collection(db, 'users', user.uid, 'juzler'), {
+                    type: 'monthly_page',
+                    title: `Aylık Hatim - ${now.toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}`,
+                    startMonth: currentKey, // Important: This locks the calculation for this specific tracker to THIS month
+                    assignedPage: targetPage,
+                    monthlyProgress: {}, // Start empty
+                    toplamSayfa: 30, // 30 Juzs
+                    okunanSayfalar: [], // Unused for monthly but good for type safety
+                    hedefBitisTarihi: endDate,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    isArchived: false
+                });
+                console.log("Auto-created monthly tracker for", currentKey);
+            } catch (error) {
+                console.error("Auto-create error:", error);
+            }
+        };
+
+        checkAndCreateMonthlyTracker();
     }, [user]);
 
     const stats = {
