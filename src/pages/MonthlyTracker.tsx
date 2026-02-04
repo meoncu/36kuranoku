@@ -4,9 +4,10 @@ import { db } from '../firebase';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
-import { ChevronLeft, BookOpen, CheckCircle2, Calendar, Lock, Settings2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ChevronLeft, BookOpen, CheckCircle2, Calendar, Lock, Settings2, ScrollText } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import EditJuzModal from '../components/EditJuzModal';
+import HatimDuaModal from '../components/HatimDuaModal';
 
 export default function MonthlyTracker() {
     const { id } = useParams();
@@ -16,6 +17,7 @@ export default function MonthlyTracker() {
     const [loading, setLoading] = useState(true);
     const [viewingDate, setViewingDate] = useState(new Date());
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showDuaModal, setShowDuaModal] = useState(false);
 
     useEffect(() => {
         if (!user || !id) return;
@@ -158,17 +160,54 @@ export default function MonthlyTracker() {
                         {completedJuzs.length} / 30
                     </span>
                 </div>
+
+                {/* Hatim Completion Banner */}
+                <AnimatePresence>
+                    {completedJuzs.length === 30 && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                            animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+                            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                            className="relative z-10"
+                        >
+                            <div className="bg-gradient-to-r from-[#C59E57]/20 to-[#C59E57]/10 border border-[#C59E57]/30 rounded-2xl p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-[#C59E57] grid place-items-center text-white shadow-lg shadow-[#C59E57]/30 animate-pulse">
+                                        <CheckCircle2 className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-[#C59E57] text-lg">Bu Ayı Tamamladın!</h3>
+                                        <p className="text-white/60 text-xs">Allah kabul etsin, hatim duası okumak ister misin?</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowDuaModal(true)}
+                                    className="px-4 py-2 bg-[#C59E57] text-white rounded-xl font-bold text-sm shadow-lg hover:bg-[#b08d4b] transition-all flex items-center gap-2"
+                                >
+                                    <ScrollText className="w-4 h-4" />
+                                    <span>Dua Oku</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
+
+            <AnimatePresence>
+                {showDuaModal && (
+                    <HatimDuaModal onClose={() => setShowDuaModal(false)} />
+                )}
+            </AnimatePresence>
 
             {showEditModal && (
                 <EditJuzModal
                     juz={tracker}
                     onClose={() => {
                         setShowEditModal(false);
-                        // Refresh logic is implicit as the modal updates Firestore, 
+                        // Refresh logic is implicit as the modal updates Firestore,
                         // and this component listens to doc? No, it uses getDoc once.
                         // Ideally we should switch to onSnapshot or re-fetch.
-                        // For now we'll reload window or update state. 
+                        // For now we'll reload window or update state.
                         // But since we navigate away usually...
                         // Let's force a reload for now or switch fetch to snapshot.
                         // Actually, I should switch the fetch to snapshot for real-time updates.
