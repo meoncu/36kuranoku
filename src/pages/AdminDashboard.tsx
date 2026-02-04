@@ -248,7 +248,7 @@ export default function AdminDashboard() {
                                             )}
                                         </td>
                                         <td className="p-4 text-right">
-                                            {u.email !== ADMIN_EMAIL && (
+                                            {u.id !== user?.uid && (
                                                 <button
                                                     onClick={() => handleToggleStatus(u.id, u.isApproved)}
                                                     className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95 ${!u.isApproved

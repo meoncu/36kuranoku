@@ -20,7 +20,7 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
     const [assignedPage, setAssignedPage] = useState(1);
     const [startMonth, setStartMonth] = useState(() => {
         const now = new Date();
-        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        return `${now.getFullYear()}-01`; // Always defaults to January of current year
     });
 
     const [title, setTitle] = useState('');
