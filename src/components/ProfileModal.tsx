@@ -26,7 +26,7 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
     const [city, setCity] = useState(profile?.city || 'Ankara');
     const [showPrayerTimes, setShowPrayerTimes] = useState(profile?.showPrayerTimes ?? true);
     const [showResumeReading, setShowResumeReading] = useState(profile?.showResumeReading ?? true);
-    const [showInstallBanner, setShowInstallBanner] = useState(profile?.showInstallBanner ?? true);
+    const [showInstallBanner, setShowInstallBanner] = useState(profile?.showInstallBanner ?? false);
     const [loading, setLoading] = useState(false);
 
     const handleSave = async (e: React.FormEvent) => {

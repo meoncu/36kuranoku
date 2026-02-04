@@ -30,7 +30,7 @@ export function useAuth() {
                             city: 'Ankara',
                             showPrayerTimes: true,
                             showResumeReading: true,
-                            showInstallBanner: true
+                            showInstallBanner: false
                         };
                         await setDoc(userRef, newProfile);
                         setProfile(newProfile);
@@ -59,7 +59,7 @@ export function useAuth() {
                             needsUpdate = true;
                         }
                         if (data.showInstallBanner === undefined) {
-                            updates.showInstallBanner = true;
+                            updates.showInstallBanner = false;
                             needsUpdate = true;
                         }
 
