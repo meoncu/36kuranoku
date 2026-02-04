@@ -277,8 +277,8 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     {selectionType === 'monthly_page' && (
                         <div className="space-y-4">
                             <div>
-                                <label className="text-sm text-white/50 mb-1 block">Başlangıç Sayfası</label>
-                                <p className="text-[10px] text-white/40 mb-2">Bu ay (veya seçilen başlangıç ayında) okumanız gereken sayfa.</p>
+                                <label className="text-sm text-white/50 mb-1 block">Ocak Ayı Sayfa Hedefi</label>
+                                <p className="text-[10px] text-white/40 mb-2">Ocak ayında okumanız gereken sayfa numarasını giriniz. Diğer aylar buna göre hesaplanır.</p>
                                 <input
                                     type="number"
                                     min="1"
@@ -290,13 +290,20 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                             </div>
 
                             <div>
-                                <label className="text-sm text-white/50 mb-1 block">Başlangıç Ayı</label>
-                                <input
-                                    type="month"
-                                    value={startMonth}
-                                    onChange={(e) => setStartMonth(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary color-scheme-dark"
-                                />
+                                <label className="text-sm text-white/50 mb-1 block">Takip Yılı</label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        min="2024"
+                                        max="2030"
+                                        value={startMonth.split('-')[0]} // Extract year
+                                        onChange={(e) => setStartMonth(`${e.target.value}-01`)} // Always set to Jan
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
+                                    />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-xs">
+                                        Ocak'tan Başlar
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
