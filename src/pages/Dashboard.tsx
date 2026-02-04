@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, where, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
-import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive } from 'lucide-react';
+import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive, Trash2, Folder, FolderOpen, ChevronDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AddJuzModal from '../components/AddJuzModal';
 import EditJuzModal from '../components/EditJuzModal';
@@ -59,8 +59,6 @@ export default function Dashboard() {
             if (!snapshot.empty) return; // Already exists
 
             // Create new tracker
-            // Calculation: Base Jan 2026 = 11.
-            // Diff from Jan 2026.
             const startYear = 2026;
             const startMonth = 1; // Jan
             const basePage = 11;
@@ -75,11 +73,11 @@ export default function Dashboard() {
                 await addDoc(collection(db, 'users', user.uid, 'juzler'), {
                     type: 'monthly_page',
                     title: `Aylık Hatim - ${now.toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}`,
-                    startMonth: currentKey, // Important: This locks the calculation for this specific tracker to THIS month
+                    startMonth: currentKey,
                     assignedPage: targetPage,
-                    monthlyProgress: {}, // Start empty
-                    toplamSayfa: 30, // 30 Juzs
-                    okunanSayfalar: [], // Unused for monthly but good for type safety
+                    monthlyProgress: {},
+                    toplamSayfa: 30,
+                    okunanSayfalar: [],
                     hedefBitisTarihi: endDate,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
@@ -138,13 +136,257 @@ export default function Dashboard() {
                 await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), {
                     isArchived: true,
                     durum: 'tamamlandi',
-                    updatedAt: serverTimestamp() // Import serverTimestamp if needed, but keeping simple for now or assuming it is imported
+                    updatedAt: serverTimestamp()
                 });
             } catch (error) {
                 console.error("Error archiving:", error);
                 alert("Arşivlenirken bir hata oluştu.");
             }
         }
+    };
+
+    const handleDelete = async (juz: Juz) => {
+        if (!user) return;
+        if (window.confirm('Bu takibi tamamen silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')) {
+            try {
+                await deleteDoc(doc(db, 'users', user.uid, 'juzler', juz.id));
+            } catch (error) {
+                console.error("Error deleting:", error);
+                alert("Silinirken bir hata oluştu.");
+            }
+        }
+    };
+
+    // --- Components for Grouping ---
+
+    const GroupCard = ({ title, juzs }: { title: string, juzs: Juz[] }) => {
+        const [isExpanded, setIsExpanded] = useState(false);
+
+        // Use Navigate inside component
+        const navigate = useNavigate();
+
+        // Calculate Stats
+        const totalPages = juzs.reduce((acc, j) => acc + j.toplamSayfa, 0);
+        const readPages = juzs.reduce((acc, j) => acc + j.okunanSayfalar.length, 0);
+        const progress = totalPages > 0 ? Math.round((readPages / totalPages) * 100) : 0;
+
+        // Sort juzs by juzNo
+        const sortedJuzs = [...juzs].sort((a, b) => (a.juzNo || 0) - (b.juzNo || 0));
+
+        return (
+            <div className="space-y-2">
+                <motion.div
+                    layout
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className={`glass-card p-5 rounded-2xl flex items-center justify-between cursor-pointer border transition-all ${isExpanded ? 'border-[#C59E57]/50 bg-[#C59E57]/5' : 'border-white/5 hover:border-white/10'}`}
+                >
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner transition-colors ${progress === 100 ? 'bg-green-500/20 text-green-500' : 'bg-[#C59E57]/20 text-[#C59E57]'}`}>
+                            {isExpanded ? <FolderOpen className="w-6 h-6" /> : <Folder className="w-6 h-6" />}
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-lg text-white group-hover:text-[#C59E57] transition-colors">{title}</h3>
+                            <p className="text-xs text-white/40 font-medium">
+                                {juzs.length} Parça • %{progress} Tamamlandı
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="text-right hidden sm:block">
+                            <span className="text-xs text-white/30 font-mono block">{readPages} / {totalPages} Sayfa</span>
+                            <div className="w-24 h-1.5 bg-black/20 rounded-full mt-1 overflow-hidden">
+                                <div className="h-full bg-[#C59E57]" style={{ width: `${progress}%` }} />
+                            </div>
+                        </div>
+                        <div className={`p-2 rounded-full transition-all ${isExpanded ? 'bg-white/10 rotate-180' : 'bg-white/5'}`}>
+                            <ChevronDown className="w-5 h-5 text-white/50" />
+                        </div>
+                    </div>
+                </motion.div>
+
+                <AnimatePresence>
+                    {isExpanded && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-4 pl-4 border-l-2 border-white/5 ml-6 py-2"
+                        >
+                            {sortedJuzs.map(juz => (
+                                <JuzCard key={juz.id} juz={juz} isChild />
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
+    };
+
+    const JuzCard = ({ juz, isChild = false }: { juz: Juz, isChild?: boolean }) => {
+        const navigate = useNavigate(); // Hook must be used inside component
+
+        // Special Render for Monthly
+        if (juz.type === 'monthly_page') {
+            const now = new Date();
+            const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const completedCount = juz.monthlyProgress?.[currentKey]?.length || 0;
+            const progress = (completedCount / 30) * 100;
+
+            const [startYear, startMonth] = (juz.startMonth || currentKey).split('-').map(Number);
+            const diffMonths = (now.getFullYear() - startYear) * 12 + (now.getMonth() + 1 - startMonth);
+            const basePage = juz.assignedPage || 1;
+            const targetPage = (((basePage - 1 + diffMonths) % 20) + 20) % 20 + 1;
+
+            return (
+                <motion.div layout>
+                    <Link
+                        to={`/juz/monthly/${juz.id}`}
+                        className={`glass-card p-6 rounded-[32px] block hover:bg-white/[0.08] transition-all group border-white/5 relative overflow-hidden ${isChild ? 'bg-black/20' : ''}`}
+                    >
+                        <div
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#C59E57]/10 to-[#C59E57]/30 transition-all duration-1000 border-r border-[#C59E57]/20"
+                            style={{ width: `${progress}%` }}
+                        />
+                        {/* Large Percentage Background */}
+                        <div className="absolute right-28 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
+                            <span className="text-5xl font-black text-white/10 tracking-tighter">
+                                %{Math.round(progress)}
+                            </span>
+                        </div>
+
+                        <div className="relative z-10 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-[#C59E57]/20 flex items-center justify-center text-[#C59E57]">
+                                    <Calendar className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-3">
+                                        <h3 className="text-white font-bold text-lg">{juz.title}</h3>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-white/60 text-xs font-medium">
+                                            {now.toLocaleString('tr-TR', { month: 'long' })} Hedefi:
+                                        </span>
+                                        <span className="bg-white/10 px-2 py-0.5 rounded text-white text-xs font-bold">{targetPage}. Sayfalar</span>
+                                    </div>
+                                    <div className="text-white/30 text-[10px] mt-1 font-medium flex gap-2">
+                                        <span>Başlangıç: {basePage}. Sayfa</span>
+                                        <span>•</span>
+                                        <span>{new Date(juz.startMonth || currentKey).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 pl-2">
+                                {/* Delete Button */}
+                                <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(juz); }}
+                                    className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"
+                                    title="Sil"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                                <div className="w-10 h-10 rounded-full bg-white/5 grid place-items-center group-hover:bg-primary group-hover:text-white transition-all">
+                                    <ChevronRight className="w-5 h-5" />
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                </motion.div>
+            )
+        }
+
+        // Standard or Surah Tracker
+        const progress = juz.toplamSayfa > 0 ? (juz.okunanSayfalar.length / juz.toplamSayfa) * 100 : 0;
+        const isCompleted = juz.okunanSayfalar.length >= juz.toplamSayfa;
+
+        return (
+            <motion.div layout>
+                <Link
+                    to={`/juz/${juz.id}`}
+                    className={`glass-card p-6 rounded-[32px] block hover:bg-white/[0.08] transition-all group border-white/5 relative overflow-hidden ${isChild ? 'bg-black/20' : ''}`}
+                >
+                    <div
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#C59E57]/10 to-[#C59E57]/30 transition-all duration-1000 border-r border-[#C59E57]/20"
+                        style={{ width: `${progress}%` }}
+                    />
+
+                    {/* Large Percentage Background */}
+                    <div className="absolute right-28 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
+                        <span className="text-5xl font-black text-white/10 tracking-tighter">
+                            %{Math.round(progress)}
+                        </span>
+                    </div>
+
+                    <div className="relative z-10 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-14 h-14 rounded-2xl bg-white/5 grid place-items-center relative ${isChild ? 'scale-90' : ''}`}>
+                                <span className="font-bold text-xl text-white">
+                                    {juz.type === 'surah' ? <BookOpen className="w-6 h-6" /> : juz.juzNo}
+                                </span>
+                                {juz.type !== 'surah' && (
+                                    <svg className="absolute inset-0 w-full h-full -rotate-90">
+                                        <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" strokeWidth="2" className="text-white/5" />
+                                        <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" strokeWidth="2" strokeDasharray={150} strokeDashoffset={150 - (150 * progress) / 100} className="text-primary" />
+                                    </svg>
+                                )}
+                            </div>
+
+                            <div className="space-y-1">
+                                <h3 className="font-bold text-lg text-white">
+                                    {juz.title ? juz.title : `${juz.juzNo}. Cüz`}
+                                </h3>
+                                <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-wider mt-1">
+                                    {isCompleted ? (
+                                        <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Tamamlandı</span>
+                                    ) : (
+                                        <span className="bg-white/5 text-white/70 px-2 py-1 rounded-lg flex items-center gap-1.5">
+                                            <BookOpen className="w-3 h-3" /> {juz.okunanSayfalar.length}/{juz.toplamSayfa} Sayfa
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pl-2">
+                            {/* Delete Button */}
+                            <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(juz); }}
+                                className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"
+                                title="Sil"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+
+                            {!isCompleted && (
+                                <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingJuz(juz); }}
+                                    className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-[#C59E57] hover:text-white transition-all backdrop-blur-sm group/edit z-20"
+                                    title="Düzenle"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                            )}
+
+                            {isCompleted && (
+                                <button
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleArchive(juz); }}
+                                    className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-all backdrop-blur-sm z-20"
+                                    title="Arşivle"
+                                >
+                                    <Archive className="w-4 h-4" />
+                                </button>
+                            )}
+
+                            <div className="w-10 h-10 rounded-full bg-white/5 grid place-items-center group-hover:bg-primary group-hover:text-white transition-all">
+                                <ChevronRight className="w-5 h-5" />
+                            </div>
+                        </div>
+                    </div>
+                </Link>
+            </motion.div>
+        );
     };
 
     return (
@@ -216,9 +458,7 @@ export default function Dashboard() {
             {/* Resume Reading Banner */}
             {lastActiveJuz && (
                 <div className="bg-[#C59E57] rounded-3xl p-6 flex items-center justify-between shadow-lg relative overflow-hidden group">
-                    {/* Background Pattern */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:bg-white/20 transition-all" />
-
                     <div className="relative z-10 flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                             <BookOpen className="text-white w-6 h-6" />
@@ -228,7 +468,6 @@ export default function Dashboard() {
                             <p className="text-white/70 text-xs font-medium">Sayfa {lastReadPage} (Cüz {lastActiveJuz.juzNo})</p>
                         </div>
                     </div>
-
                     <Link
                         to={`/juz/${lastActiveJuz.id}`}
                         className="relative z-10 bg-white text-[#C59E57] px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-white/90 transition-colors"
@@ -248,7 +487,6 @@ export default function Dashboard() {
                 <Link to="/surahs" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-all text-center group h-40 relative">
                     <span className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">YENİ</span>
                     <div className="w-8 h-8 text-[#C59E57] group-hover:scale-110 transition-transform">
-                        {/* Simple Mosque Icon representation */}
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 2L4 7v13h16V7l-8-5z" />
                             <path d="M10 20v-6h4v6" />
@@ -286,7 +524,7 @@ export default function Dashboard() {
                 </Link>
             </div>
 
-            {/* Existing Header Stats (Condensed) */}
+            {/* Header Stats */}
             <div className="flex items-center justify-between px-2 pt-4">
                 <h2 className="text-lg font-bold text-white">Okuma Takibi</h2>
                 <button
@@ -297,11 +535,11 @@ export default function Dashboard() {
                 </button>
             </div>
 
-            {/* List of Juzlar */}
+            {/* List of Juzlar / Groups */}
             <main className="space-y-4">
                 <div className="flex items-center justify-between px-2">
                     <h2 className="text-sm font-bold text-white/60 uppercase tracking-widest">Aktif Cüzlerin</h2>
-                    <span className="text-[10px] text-white/30 font-bold">{stats.activeCount} Cüz</span>
+                    <span className="text-xs text-white/30 font-bold">{stats.activeCount} Cüz</span>
                 </div>
 
                 {loading ? (
@@ -323,218 +561,43 @@ export default function Dashboard() {
                     </motion.div>
                 ) : (
                     <div className="grid gap-4">
-                        {juzler.map((juz, index) => {
-                            // Special Handling for Monthly Page Tracker
-                            if (juz.type === 'monthly_page') {
-                                const now = new Date();
-                                const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                                const completedCount = juz.monthlyProgress?.[currentKey]?.length || 0;
-                                const progress = (completedCount / 30) * 100;
+                        {/* Grouping Logic Implementation */}
+                        {Object.entries(
+                            juzler.reduce((acc, juz) => {
+                                // Default Group
+                                let key = 'ungrouped';
 
-                                // Calculate Target Page
-                                const [startYear, startMonth] = (juz.startMonth || currentKey).split('-').map(Number);
-                                const diffMonths = (now.getFullYear() - startYear) * 12 + (now.getMonth() + 1 - startMonth);
-                                const basePage = juz.assignedPage || 1;
-                                const targetPage = (((basePage - 1 + diffMonths) % 20) + 20) % 20 + 1;
+                                // Regex: Matches "Text (1. Cüz)" or "Text (12. Cüz)" etc.
+                                // Capture group 1 is the Title part.
+                                const title = juz.title || '';
+                                const match = title.match(/(.+?)\s*\(\d+\.\s*Cüz\)/i);
 
-                                return (
-                                    <motion.div
-                                        key={juz.id}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: index * 0.05 }}
-                                    >
-                                        <Link
-                                            to={`/juz/monthly/${juz.id}`}
-                                            className="glass-card p-6 rounded-[32px] block hover:bg-white/[0.08] transition-all group border-white/5 relative overflow-hidden"
-                                        >
-                                            <div
-                                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#C59E57]/10 to-[#C59E57]/30 transition-all duration-1000 border-r border-[#C59E57]/20"
-                                                style={{ width: `${progress}%` }}
-                                            />
+                                if (juz.type === 'juz' && match) {
+                                    key = match[1].trim();
+                                }
 
-                                            {/* Content */}
-                                            <div className="relative z-10 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 rounded-2xl bg-[#C59E57]/20 flex items-center justify-center text-[#C59E57]">
-                                                        <Calendar className="w-6 h-6" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-3">
-                                                            <h3 className="text-white font-bold text-lg">{juz.title}</h3>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            {/* Dynamic Target Label */}
-                                                            <span className="text-white/60 text-xs font-medium">
-                                                                {now.toLocaleString('tr-TR', { month: 'long' })} Hedefi:
-                                                            </span>
-                                                            <span className="bg-white/10 px-2 py-0.5 rounded text-white text-xs font-bold">{targetPage}. Sayfalar</span>
-                                                        </div>
-
-                                                        {/* Static Start Info */}
-                                                        <div className="text-white/30 text-[10px] mt-1 font-medium flex gap-2">
-                                                            <span>Başlangıç: {basePage}. Sayfa</span>
-                                                            <span>•</span>
-                                                            <span>{new Date(juz.startMonth || currentKey).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}</span>
-                                                        </div>
-
-                                                        <div className="text-[#C59E57] text-xs font-bold mt-2">
-                                                            {completedCount} / 30 Cüz Okundu
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-2 pl-2">
-                                                    <div className="w-10 h-10 rounded-full bg-white/5 grid place-items-center group-hover:bg-primary group-hover:text-white transition-all">
-                                                        <ChevronRight className="w-5 h-5" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </motion.div>
-                                );
+                                if (!acc[key]) acc[key] = [];
+                                acc[key].push(juz);
+                                return acc;
+                            }, {} as Record<string, Juz[]>)
+                        ).sort((a, b) => {
+                            // Sort Ungrouped last
+                            if (a[0] === 'ungrouped') return 1;
+                            if (b[0] === 'ungrouped') return -1;
+                            return 0;
+                        }).map(([groupName, groupJuzs]) => {
+                            if (groupName === 'ungrouped') {
+                                return groupJuzs.map(juz => (
+                                    <JuzCard key={juz.id} juz={juz} />
+                                ));
                             }
-
-                            const progress = (juz.okunanSayfalar.length / juz.toplamSayfa) * 100;
-                            const isCompleted = juz.okunanSayfalar.length >= juz.toplamSayfa;
-                            const remainingDays = juz.hedefBitisTarihi
-                                ? Math.ceil((juz.hedefBitisTarihi.toDate().getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-                                : null;
-
                             return (
-                                <motion.div
-                                    key={juz.id}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: index * 0.05 }}
-                                >
-                                    <Link
-                                        to={`/juz/${juz.id}`}
-                                        className="glass-card p-6 rounded-[32px] block hover:bg-white/[0.08] transition-all group border-white/5 relative overflow-hidden"
-                                    >
-                                        <div
-                                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#C59E57]/10 to-[#C59E57]/30 transition-all duration-1000 border-r border-[#C59E57]/20"
-                                            style={{ width: `${progress}%` }}
-                                        />
-
-                                        {/* Large Percentage Background - Positioned to left of buttons */}
-                                        <div className="absolute right-28 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
-                                            <span className="text-5xl font-black text-white/10 tracking-tighter">
-                                                %{Math.round(progress)}
-                                            </span>
-                                        </div>
-
-                                        <div className="relative z-10 flex items-center justify-between">
-
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-14 h-14 rounded-2xl bg-white/5 grid place-items-center relative">
-                                                    <span className="font-bold text-xl text-white">{juz.juzNo}</span>
-                                                    <svg className="absolute inset-0 w-full h-full -rotate-90">
-                                                        <circle
-                                                            cx="28" cy="28" r="24"
-                                                            fill="transparent"
-                                                            stroke="currentColor"
-                                                            strokeWidth="2"
-                                                            className="text-white/5"
-                                                        />
-                                                        <circle
-                                                            cx="28" cy="28" r="24"
-                                                            fill="transparent"
-                                                            stroke="currentColor"
-                                                            strokeWidth="2"
-                                                            strokeDasharray={150}
-                                                            strokeDashoffset={150 - (150 * progress) / 100}
-                                                            className="text-primary"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex flex-col gap-1">
-                                                            <h3 className="font-bold text-lg text-white">
-                                                                {juz.title ? juz.title : `${juz.juzNo}. Cüz`}
-                                                            </h3>
-                                                            {(juz.assignedBy || juz.notes) && (
-                                                                <div className="flex items-center gap-2 text-[10px] text-white/40">
-                                                                    {juz.assignedBy && (
-                                                                        <span className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded">
-                                                                            <User className="w-3 h-3" /> {juz.assignedBy}
-                                                                        </span>
-                                                                    )}
-                                                                    {juz.notes && (
-                                                                        <span className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded" title={juz.notes}>
-                                                                            <StickyNote className="w-3 h-3" /> Not
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-wider mt-1">
-                                                            {isCompleted ? (
-                                                                <span className="text-green-400 flex items-center gap-1">
-                                                                    <CheckCircle2 className="w-3 h-3" /> Tamamlandı
-                                                                </span>
-                                                            ) : (
-                                                                <>
-                                                                    <span className="bg-white/5 text-white/70 px-2 py-1 rounded-lg flex items-center gap-1.5">
-                                                                        <BookOpen className="w-3 h-3" /> {juz.okunanSayfalar.length}/{juz.toplamSayfa} Sayfa
-                                                                    </span>
-                                                                    {remainingDays !== null && (
-                                                                        <span className={`${remainingDays <= 3 ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'} px-2 py-1 rounded-lg flex items-center gap-1.5`}>
-                                                                            <Clock className="w-3 h-3" /> {remainingDays > 0 ? `${remainingDays} GÜN KALDI` : 'SÜRE DOLDU'}
-                                                                        </span>
-                                                                    )}
-                                                                    {remainingDays !== null && remainingDays > 0 && !isCompleted && (
-                                                                        <span className="text-[#C59E57] flex items-center gap-1 bg-[#C59E57]/10 px-2 py-0.5 rounded-full">
-                                                                            <TrendingUp className="w-3 h-3" />
-                                                                            GÜNDE {Math.ceil((juz.toplamSayfa - juz.okunanSayfalar.length) / remainingDays)} SAYFA
-                                                                        </span>
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 pl-2">
-                                                {isCompleted ? (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            handleArchive(juz);
-                                                        }}
-                                                        className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-all backdrop-blur-sm z-20"
-                                                        title="Tamamla ve Arşivle"
-                                                    >
-                                                        <Archive className="w-4 h-4" />
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            setEditingJuz(juz);
-                                                        }}
-                                                        className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-[#C59E57] hover:text-white transition-all backdrop-blur-sm group/edit"
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
-                                                )}
-
-                                                <div className="w-10 h-10 rounded-full bg-white/5 grid place-items-center group-hover:bg-primary group-hover:text-white transition-all">
-                                                    <ChevronRight className="w-5 h-5" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                </motion.div>
+                                <GroupCard key={groupName} title={groupName} juzs={groupJuzs} />
                             );
                         })}
                     </div>
-                )
-                }
-            </main >
-        </div >
+                )}
+            </main>
+        </div>
     );
 }
