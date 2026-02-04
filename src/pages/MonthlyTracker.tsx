@@ -1,7 +1,8 @@
+```javascript
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
 import { ChevronLeft, BookOpen, CheckCircle2, Calendar, Lock, Settings2, ScrollText } from 'lucide-react';
@@ -21,29 +22,28 @@ export default function MonthlyTracker() {
 
     useEffect(() => {
         if (!user || !id) return;
-
-        const fetchTracker = async () => {
-            try {
-                const docRef = doc(db, 'users', user.uid, 'juzler', id);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    setTracker({ id: docSnap.id, ...docSnap.data() } as Juz);
-                }
-            } catch (error) {
-                console.error("Error fetching tracker:", error);
-            } finally {
-                setLoading(false);
+        
+        // Real-time listener
+        const unsubscribe = onSnapshot(doc(db, 'users', user.uid, 'juzler', id), (docSnap) => {
+            if (docSnap.exists()) {
+                setTracker({ id: docSnap.id, ...docSnap.data() } as Juz);
+            } else {
+                setTracker(null);
             }
-        };
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching tracker:", error);
+            setLoading(false);
+        });
 
-        fetchTracker();
+        return () => unsubscribe();
     }, [user, id]);
 
     if (loading) return <div className="p-8 text-center text-white/50">Yükleniyor...</div>;
     if (!tracker) return <div className="p-8 text-center text-white/50">Takip bulunamadı.</div>;
 
     // Calculation Logic based on VIEWING DATE
-    const currentKey = `${viewingDate.getFullYear()}-${String(viewingDate.getMonth() + 1).padStart(2, '0')}`;
+    const currentKey = `${ viewingDate.getFullYear() } -${ String(viewingDate.getMonth() + 1).padStart(2, '0') } `;
     const [startYear, startMonth] = (tracker.startMonth || currentKey).split('-').map(Number);
     const diffMonths = (viewingDate.getFullYear() - startYear) * 12 + (viewingDate.getMonth() + 1 - startMonth);
     const basePage = tracker.assignedPage || 1;
@@ -81,7 +81,7 @@ export default function MonthlyTracker() {
 
             // We need to update the specific month's array in the map
             // Firestore map update syntax for nested fields: "monthlyProgress.2024-02"
-            const fieldPath = `monthlyProgress.${currentKey}`;
+            const fieldPath = `monthlyProgress.${ currentKey } `;
 
             await updateDoc(docRef, {
                 [fieldPath]: isRead ? arrayRemove(juzIndex) : arrayUnion(juzIndex)
@@ -153,7 +153,7 @@ export default function MonthlyTracker() {
                     <div className="flex-1 bg-black/20 h-3 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-[#C59E57] transition-all duration-1000"
-                            style={{ width: `${progress}%` }}
+                            style={{ width: `${ progress }% ` }}
                         />
                     </div>
                     <span className="text-[#C59E57] font-bold text-sm whitespace-nowrap">
@@ -226,14 +226,14 @@ export default function MonthlyTracker() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: juzIndex * 0.02 }}
-                            className={`glass-card p-4 rounded-2xl flex items-center justify-between border transition-all ${isRead ? 'border-green-500/30 bg-green-500/5' : 'border-white/5 hover:bg-white/5'}`}
+                            className={`glass - card p - 4 rounded - 2xl flex items - center justify - between border transition - all ${ isRead ? 'border-green-500/30 bg-green-500/5' : 'border-white/5 hover:bg-white/5' } `}
                         >
                             <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${isRead ? 'bg-green-500/20 text-green-500' : 'bg-white/5 text-white/50'}`}>
+                                <div className={`w - 10 h - 10 rounded - xl flex items - center justify - center font - bold text - sm ${ isRead ? 'bg-green-500/20 text-green-500' : 'bg-white/5 text-white/50' } `}>
                                     {juzIndex}
                                 </div>
                                 <div>
-                                    <h3 className={`font-bold text-sm ${isRead ? 'text-green-500' : 'text-white'}`}>
+                                    <h3 className={`font - bold text - sm ${ isRead ? 'text-green-500' : 'text-white' } `}>
                                         {juzIndex}. Cüz
                                     </h3>
                                     <p className="text-[10px] text-white/40 font-medium">
@@ -245,7 +245,7 @@ export default function MonthlyTracker() {
                             <div className="flex items-center gap-2">
                                 {/* Read Button */}
                                 <Link
-                                    to={`/juz/${tracker.id}?mode=monthly&juzIndex=${juzIndex}&targetPage=${targetPage}&month=${currentKey}`}
+                                    to={`/ juz / ${ tracker.id }?mode = monthly & juzIndex=${ juzIndex }& targetPage=${ targetPage }& month=${ currentKey } `}
                                     className="p-2 rounded-lg bg-[#C59E57]/10 text-[#C59E57] hover:bg-[#C59E57] hover:text-white transition-all group"
                                     title="Sayfayı oku"
                                 >
@@ -255,7 +255,7 @@ export default function MonthlyTracker() {
                                 {/* Checkbox / Toggle */}
                                 <button
                                     onClick={() => toggleReadStatus(juzIndex)}
-                                    className={`p-2 rounded-lg transition-all ${isRead ? 'bg-green-500 text-white' : 'bg-white/5 text-white/20 hover:text-white'}`}
+                                    className={`p - 2 rounded - lg transition - all ${ isRead ? 'bg-green-500 text-white' : 'bg-white/5 text-white/20 hover:text-white' } `}
                                 >
                                     <CheckCircle2 className="w-5 h-5" />
                                 </button>
