@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Download, X, Smartphone, Share, PlusSquare } from 'lucide-react';
+import { Download, X, Smartphone, Share, PlusSquare, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function InstallPWA() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showInstallBanner, setShowInstallBanner] = useState(false);
     const [isIos, setIsIos] = useState(false);
+    const [manualShow, setManualShow] = useState(false);
 
     useEffect(() => {
-        // Detect iOS
+        // 1. Detect iOS
         const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
         setIsIos(isIosDevice);
 
-        // Capture Chrome/Android install prompt
+        // 2. Check if already installed / standalone
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+
+        // 3. Capture Chrome/Android install prompt
         const handler = (e: any) => {
             e.preventDefault();
             setDeferredPrompt(e);
@@ -21,34 +25,50 @@ export default function InstallPWA() {
 
         window.addEventListener('beforeinstallprompt', handler);
 
-        // Check if already in standalone mode
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+        // 4. Persistence Check: If user dismissed once, maybe don't show?
+        // But for "I can't see it" cases, we should show it if not standalone.
+        const isDismissed = localStorage.getItem('pwa_banner_dismissed') === 'true';
 
-        if (isIosDevice && !isStandalone) {
-            setShowInstallBanner(true);
+        if (!isStandalone && !isDismissed) {
+            // Show for iOS immediately (since there is no event)
+            if (isIosDevice) {
+                setShowInstallBanner(true);
+            }
+            // For others, we wait for beforeinstallprompt event.
+            // But if it takes too long and we want to show instructions anyway:
+            const timer = setTimeout(() => {
+                setManualShow(true);
+            }, 3000);
+            return () => clearTimeout(timer);
         }
 
         return () => window.removeEventListener('beforeinstallprompt', handler);
     }, []);
 
     const handleInstallClick = async () => {
-        if (!deferredPrompt && !isIos) return;
-
-        if (isIos) {
-            // iOS instructions are handled by just showing the banner with info
-            return;
-        }
-
-        // Chrome/Android
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            setDeferredPrompt(null);
-            setShowInstallBanner(false);
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                setDeferredPrompt(null);
+                setShowInstallBanner(false);
+            }
         }
     };
 
-    if (!showInstallBanner) return null;
+    const handleDismiss = () => {
+        localStorage.setItem('pwa_banner_dismissed', 'true');
+        setShowInstallBanner(false);
+        setManualShow(false);
+    };
+
+    // If it's already installed, don't show anything
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    if (isStandalone) return null;
+
+    // Show if we have a prompt OR if we are on iOS OR if we want to show manual instructions
+    const visible = showInstallBanner || manualShow;
+    if (!visible) return null;
 
     return (
         <AnimatePresence>
@@ -61,7 +81,7 @@ export default function InstallPWA() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
                 <button
-                    onClick={() => setShowInstallBanner(false)}
+                    onClick={handleDismiss}
                     className="absolute top-3 right-3 text-white/20 hover:text-white transition-colors p-1"
                 >
                     <X className="w-4 h-4" />
@@ -77,11 +97,13 @@ export default function InstallPWA() {
                         <p className="text-white/60 text-[10px] sm:text-xs leading-tight mt-0.5">
                             {isIos
                                 ? "Safari'de 'Paylaş' -> 'Ana Ekrana Ekle' yolunu izle."
-                                : "Hızlı erişim için ana ekranına bir uygulama olarak ekle."}
+                                : deferredPrompt
+                                    ? "Hızlı erişim için ana ekranına bir uygulama olarak ekle."
+                                    : "Tarayıcı ayarlarından 'Yükle' veya 'Ana Ekrana Ekle'yi seçin."}
                         </p>
                     </div>
 
-                    {!isIos && (
+                    {deferredPrompt ? (
                         <button
                             onClick={handleInstallClick}
                             className="bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 flex items-center gap-2"
@@ -89,13 +111,16 @@ export default function InstallPWA() {
                             <Download className="w-4 h-4" />
                             <span>Yükle</span>
                         </button>
-                    )}
-
-                    {isIos && (
+                    ) : isIos ? (
                         <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-xl border border-white/10">
                             <Share className="w-4 h-4 text-primary" />
                             <span className="text-[10px] font-bold text-white/40 uppercase">Paylaş</span>
                             <PlusSquare className="w-4 h-4 text-primary" />
+                        </div>
+                    ) : (
+                        <div className="bg-white/5 px-4 py-2.5 rounded-xl border border-white/10 flex items-center gap-2">
+                            <Info className="w-4 h-4 text-white/30" />
+                            <span className="text-[10px] font-bold text-white/40 uppercase">Mobil İçin</span>
                         </div>
                     )}
                 </div>
