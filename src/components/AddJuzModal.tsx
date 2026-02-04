@@ -138,6 +138,7 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     toplamSayfa: 30,
                     startPage: 0,
                     endPage: 0,
+                    isSingleMonth: true, // Manual creation implies single month focus
                     baslangicTarihi: serverTimestamp(),
                     hedefBitisTarihi: targetDate ? new Date(targetDate) : null,
                     okunanSayfalar: [],

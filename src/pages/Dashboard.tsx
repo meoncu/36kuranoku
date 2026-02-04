@@ -249,7 +249,7 @@ export default function Dashboard() {
                             style={{ width: `${progress}%` }}
                         />
                         {/* Large Percentage Background */}
-                        <div className="absolute right-36 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
+                        <div className="absolute right-40 sm:right-44 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
                             <span className="text-5xl font-black text-white/10 tracking-tighter">
                                 %{Math.round(progress)}
                             </span>
@@ -313,7 +313,7 @@ export default function Dashboard() {
                     />
 
                     {/* Large Percentage Background */}
-                    <div className="absolute right-36 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
+                    <div className="absolute right-40 sm:right-44 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
                         <span className="text-5xl font-black text-white/10 tracking-tighter">
                             %{Math.round(progress)}
                         </span>

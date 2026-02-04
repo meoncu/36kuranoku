@@ -25,7 +25,14 @@ export default function MonthlyTracker() {
         // Real-time listener
         const unsubscribe = onSnapshot(doc(db, 'users', user.uid, 'juzler', id), (docSnap) => {
             if (docSnap.exists()) {
-                setTracker({ id: docSnap.id, ...docSnap.data() } as Juz);
+                const data = { id: docSnap.id, ...docSnap.data() } as Juz;
+                setTracker(data);
+
+                // If Single Month, lock view to that month
+                if (data.isSingleMonth && data.startMonth) {
+                    const [y, m] = data.startMonth.split('-');
+                    setViewingDate(new Date(parseInt(y), parseInt(m) - 1));
+                }
             } else {
                 setTracker(null);
             }
@@ -113,9 +120,11 @@ export default function MonthlyTracker() {
                 </Link>
 
                 <div className="flex items-center gap-4">
-                    <button onClick={handlePrevMonth} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors">
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
+                    {!tracker.isSingleMonth && (
+                        <button onClick={handlePrevMonth} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors">
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                    )}
 
                     <div className="flex items-center gap-2 bg-[#C59E57]/10 px-3 py-1.5 rounded-lg text-[#C59E57] min-w-[140px] justify-center">
                         <Calendar className="w-4 h-4" />
@@ -124,9 +133,11 @@ export default function MonthlyTracker() {
                         </span>
                     </div>
 
-                    <button onClick={handleNextMonth} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors">
-                        <ChevronLeft className="w-5 h-5 rotate-180" />
-                    </button>
+                    {!tracker.isSingleMonth && (
+                        <button onClick={handleNextMonth} className="p-1 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors">
+                            <ChevronLeft className="w-5 h-5 rotate-180" />
+                        </button>
+                    )}
                 </div>
             </div>
 
