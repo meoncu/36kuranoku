@@ -236,7 +236,11 @@ export default function Dashboard() {
             const [startYear, startMonth] = (juz.startMonth || currentKey).split('-').map(Number);
             const diffMonths = (now.getFullYear() - startYear) * 12 + (now.getMonth() + 1 - startMonth);
             const basePage = juz.assignedPage || 1;
-            const targetPage = (((basePage - 1 + diffMonths) % 20) + 20) % 20 + 1;
+
+            // If Single Month, target is always base page. Else, calculate offset.
+            const targetPage = juz.isSingleMonth
+                ? basePage
+                : (((basePage - 1 + diffMonths) % 20) + 20) % 20 + 1;
 
             return (
                 <motion.div layout>

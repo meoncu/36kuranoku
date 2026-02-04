@@ -57,7 +57,9 @@ export default function MonthlyTracker() {
     // Actually, logic: if diff is negative, page decreases. 
     // Example: Start Jan (Pg 1). View Dec (Prev Year). Diff = -1. Page = 0 -> 20.
     // ((base - 1 + diff) % 20 + 20) % 20 + 1
-    const targetPage = (((basePage - 1 + diffMonths) % 20) + 20) % 20 + 1;
+    const targetPage = tracker.isSingleMonth
+        ? basePage
+        : (((basePage - 1 + diffMonths) % 20) + 20) % 20 + 1;
 
     const completedJuzs = tracker.monthlyProgress?.[currentKey] || [];
     const progress = (completedJuzs.length / 30) * 100;
