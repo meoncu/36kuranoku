@@ -95,13 +95,14 @@ export default function Reader() {
 
                     if (mode === 'normal') {
                         const globalPage = Number(searchParams.get('initialPage'));
+                        const juzTotalPages = data.toplamSayfa || 20;
                         if (globalPage) {
-                            const juzStartPage = data.juzNo === 1 ? 1 : ((data.juzNo - 1) * 20) + 2;
-                            const relativePage = Math.max(1, Math.min(20, globalPage - juzStartPage + 1));
+                            const juzStartPage = data.startPage || (data.juzNo === 1 ? 1 : ((data.juzNo - 1) * 20) + 2);
+                            const relativePage = Math.max(1, Math.min(juzTotalPages, globalPage - juzStartPage + 1));
                             setCurrentPage(relativePage);
                         } else if (data.okunanSayfalar.length > 0) {
                             const lastRead = Math.max(...data.okunanSayfalar);
-                            setCurrentPage(Math.min(lastRead + 1, 20));
+                            setCurrentPage(Math.min(lastRead + 1, juzTotalPages));
                         }
                     }
                 }
@@ -155,10 +156,12 @@ export default function Reader() {
             }
         } else {
             // Normal
-            if (currentPage < 20) {
+            if (!juz) return;
+            const juzTotalPages = juz.toplamSayfa || 20;
+            if (currentPage < juzTotalPages) {
                 setDirection(1);
                 setCurrentPage(prev => prev + 1);
-            } else if (currentPage === 20) {
+            } else if (currentPage === juzTotalPages) {
                 navigate('/');
             }
         }
@@ -194,9 +197,10 @@ export default function Reader() {
         const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         isPageRead = juz.monthlyProgress?.[currentKey]?.includes(currentJuzIndex) || false;
     } else {
-        const juzStartPage = juz.juzNo === 1 ? 1 : ((juz.juzNo - 1) * 20) + 2;
+        const juzStartPage = juz.startPage || (juz.juzNo === 1 ? 1 : ((juz.juzNo - 1) * 20) + 2);
+        const juzTotalPages = juz.toplamSayfa || 20;
         currentMushafPage = juzStartPage + (currentPage - 1);
-        headerTitle = `${juz.juzNo}. Cüz - Sayfa ${currentPage}/20`;
+        headerTitle = `${juz.juzNo}. Cüz - Sayfa ${currentPage}/${juzTotalPages}`;
         isPageRead = juz.okunanSayfalar.includes(currentPage);
     }
 

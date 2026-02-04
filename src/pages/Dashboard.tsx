@@ -107,8 +107,10 @@ export default function Dashboard() {
         })[0];
     const lastReadPage = lastActiveJuz ? (Math.max(...(lastActiveJuz.okunanSayfalar.length > 0 ? lastActiveJuz.okunanSayfalar : [0])) + 1) : 1;
     // Calculate global page number for generic reader
-    const startPageOfJuz = lastActiveJuz ? (lastActiveJuz.juzNo === 1 ? 1 : ((lastActiveJuz.juzNo - 1) * 20) + 2) : 1;
-    const currentGlobalPage = startPageOfJuz + (lastActiveJuz ? Math.min(lastReadPage - 1, 19) : 0);
+    const startPageOfJuz = lastActiveJuz
+        ? (lastActiveJuz.startPage || (lastActiveJuz.juzNo === 1 ? 1 : ((lastActiveJuz.juzNo - 1) * 20) + 2))
+        : 1;
+    const currentGlobalPage = startPageOfJuz + (lastActiveJuz ? Math.min(lastReadPage - 1, (lastActiveJuz.toplamSayfa || 20) - 1) : 0);
 
     // Find Surah Name
     const getSurahName = (page: number) => {
@@ -420,6 +422,14 @@ export default function Dashboard() {
                                 <div className="text-center space-y-2">
                                     <h3 className="text-xl font-bold text-white">Sayfaya Git</h3>
                                     <p className="text-white/40 text-sm">Gitmek istediğin sayfa numarasını gir</p>
+                                    {targetPage && Number(targetPage) >= 1 && Number(targetPage) <= 604 && (
+                                        <div className="mt-2 bg-primary/10 py-1.5 px-3 rounded-lg border border-primary/20 inline-flex items-center gap-2">
+                                            <BookOpen className="w-3.5 h-3.5 text-primary" />
+                                            <span className="text-primary font-bold text-xs">
+                                                {getSurahName(Number(targetPage))}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <form onSubmit={handlePageSubmit} className="w-full space-y-4">

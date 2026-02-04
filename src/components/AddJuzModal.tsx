@@ -64,8 +64,21 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                 }
 
                 for (const jNo of selectedJuzs) {
-                    let startPage = (jNo === 1) ? 1 : ((jNo - 1) * 20) + 2;
-                    let endPage = startPage + 19;
+                    let startPage, endPage, totalPages;
+
+                    if (jNo === 1) {
+                        startPage = 1;
+                        endPage = 21;
+                        totalPages = 21;
+                    } else if (jNo === 30) {
+                        startPage = 582;
+                        endPage = 604;
+                        totalPages = 23;
+                    } else {
+                        startPage = ((jNo - 1) * 20) + 2;
+                        endPage = startPage + 19;
+                        totalPages = 20;
+                    }
 
                     // If user didn't enter a custom title, default to "X. Cüz"
                     // If user entered a custom title (e.g. "Ramazan"), append " (X. Cüz)"
@@ -85,7 +98,7 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                         juzNo: jNo,
                         surahId: 0,
                         title: finalTitle,
-                        toplamSayfa: 20,
+                        toplamSayfa: totalPages,
                         startPage: startPage,
                         endPage: endPage,
                         baslangicTarihi: serverTimestamp(),
