@@ -20,6 +20,10 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
     const [selectedSurahId, setSelectedSurahId] = useState(juz.surahId || 0);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Specific for Monthly Page
+    const [assignedPage, setAssignedPage] = useState(juz.assignedPage || 1);
+    const [startMonth, setStartMonth] = useState(juz.startMonth || '');
+
     const [title, setTitle] = useState(juz.title || '');
     const [assignedBy, setAssignedBy] = useState(juz.assignedBy || '');
     const [notes, setNotes] = useState(juz.notes || '');
@@ -53,27 +57,31 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                 endPage = nextSurah ? nextSurah.startPage - 1 : 604;
                 totalPages = (endPage - startPage) + 1;
 
-                // Only auto-update title if it was default or empty
                 if (!title || title.includes('Cüz') || title.includes('Suresi')) {
                     finalTitle = `${surah.name} Suresi`;
                 }
                 surahId = surah.id;
+            } else if (selectionType === 'monthly_page') {
+                totalPages = 30;
+                startPage = 0;
+                endPage = 0;
+                if (!title) finalTitle = `Aylık Cüz Takibi (${assignedPage}. Sayfa)`;
             } else {
                 if (juzNo === 1) startPage = 1;
-                // Only auto-update title if it was default
                 if (!title || title.includes('Cüz') || title.includes('Suresi')) {
                     finalTitle = `${juzNo}. Cüz`;
                 }
             }
 
-            // Don't overwrite title if user has typed something specific and didn't change it back to default?
-            // Actually, let's keep the user's title if they didn't touch it, UNLESS they changed the Juz/Surah selection.
-            // Simplified: If title is empty, generate it.
-            if (!title) finalTitle = selectionType === 'surah' ? `${CHAPTERS.find(c => c.id === selectedSurahId)?.name} Suresi` : `${juzNo}. Cüz`;
-            else finalTitle = title;
+            if (!title) {
+                if (selectionType === 'surah') finalTitle = `${CHAPTERS.find(c => c.id === selectedSurahId)?.name} Suresi`;
+                else if (selectionType === 'monthly_page') finalTitle = `Aylık Cüz Takibi (${assignedPage}. Sayfa)`;
+                else finalTitle = `${juzNo}. Cüz`;
+            } else {
+                finalTitle = title;
+            }
 
-
-            await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), {
+            const updateData: any = {
                 type: selectionType,
                 juzNo: selectionType === 'juz' ? juzNo : 0,
                 surahId: surahId,
@@ -85,7 +93,14 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                 notes,
                 hedefBitisTarihi: new Date(targetDate),
                 updatedAt: serverTimestamp()
-            });
+            };
+
+            if (selectionType === 'monthly_page') {
+                updateData.assignedPage = assignedPage;
+                updateData.startMonth = startMonth;
+            }
+
+            await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), updateData);
             onClose();
         } catch (error) {
             console.error("Error updating juz:", error);
@@ -118,11 +133,17 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                     >
                         Sure
                     </button>
+                    <button
+                        onClick={() => setSelectionType('monthly_page')}
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${selectionType === 'monthly_page' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                    >
+                        Aylık
+                    </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Selection UI */}
-                    {selectionType === 'juz' ? (
+                    {selectionType === 'juz' && (
                         <div>
                             <label className="text-sm text-white/50 mb-1 block">Cüz Numarası</label>
                             <input
@@ -134,7 +155,9 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
                             />
                         </div>
-                    ) : (
+                    )}
+
+                    {selectionType === 'surah' && (
                         <div className="space-y-2">
                             <label className="text-sm text-white/50 mb-1 block">Sure Ara ve Seç</label>
                             <div className="relative">
@@ -169,6 +192,31 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                                 {CHAPTERS.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                                     <div className="p-4 text-center text-white/30 text-xs">Sonuç bulunamadı</div>
                                 )}
+                            </div>
+                        </div>
+                    )}
+
+                    {selectionType === 'monthly_page' && (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm text-white/50 mb-1 block">Başlangıç Sayfası</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="20"
+                                    value={assignedPage}
+                                    onChange={(e) => setAssignedPage(Number(e.target.value))}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-white/50 mb-1 block">Başlangıç Ayı</label>
+                                <input
+                                    type="month"
+                                    value={startMonth}
+                                    onChange={(e) => setStartMonth(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary [color-scheme:dark]"
+                                />
                             </div>
                         </div>
                     )}

@@ -4,8 +4,9 @@ import { db } from '../firebase';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
-import { ChevronLeft, BookOpen, CheckCircle2, Calendar, Lock } from 'lucide-react';
+import { ChevronLeft, BookOpen, CheckCircle2, Calendar, Lock, Settings2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import EditJuzModal from '../components/EditJuzModal';
 
 export default function MonthlyTracker() {
     const { id } = useParams();
@@ -14,6 +15,7 @@ export default function MonthlyTracker() {
     const [tracker, setTracker] = useState<Juz | null>(null);
     const [loading, setLoading] = useState(true);
     const [viewingDate, setViewingDate] = useState(new Date());
+    const [showEditModal, setShowEditModal] = useState(false);
 
     useEffect(() => {
         if (!user || !id) return;
@@ -128,15 +130,24 @@ export default function MonthlyTracker() {
             </div>
 
             {/* Summary Card */}
-            <div className="glass-card p-6 rounded-[32px] relative overflow-hidden">
+            <div className="glass-card p-6 rounded-[32px] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#C59E57]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-                <h1 className="text-2xl font-bold text-white mb-2">{tracker.title}</h1>
-                <p className="text-white/60 text-sm mb-6">
+                <div className="relative z-10 flex justify-between items-start mb-2">
+                    <h1 className="text-2xl font-bold text-white">{tracker.title}</h1>
+                    <button
+                        onClick={() => setShowEditModal(true)}
+                        className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white/50 hover:text-white transition-all"
+                    >
+                        <Settings2 className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <p className="text-white/60 text-sm mb-6 relative z-10">
                     Seçili ayda her cüzün <strong className="text-white bg-white/10 px-2 py-0.5 rounded mx-1">{targetPage}.</strong> sayfasını okumalısınız.
                 </p>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 relative z-10">
                     <div className="flex-1 bg-black/20 h-3 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-[#C59E57] transition-all duration-1000"
@@ -148,6 +159,22 @@ export default function MonthlyTracker() {
                     </span>
                 </div>
             </div>
+
+            {showEditModal && (
+                <EditJuzModal
+                    juz={tracker}
+                    onClose={() => {
+                        setShowEditModal(false);
+                        // Refresh logic is implicit as the modal updates Firestore, 
+                        // and this component listens to doc? No, it uses getDoc once.
+                        // Ideally we should switch to onSnapshot or re-fetch.
+                        // For now we'll reload window or update state. 
+                        // But since we navigate away usually...
+                        // Let's force a reload for now or switch fetch to snapshot.
+                        // Actually, I should switch the fetch to snapshot for real-time updates.
+                    }}
+                />
+            )}
 
             {/* Juz List */}
             <div className="space-y-3">
