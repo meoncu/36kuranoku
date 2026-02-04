@@ -7,6 +7,7 @@ import SurahIndex from './pages/SurahIndex';
 import JuzIndex from './pages/JuzIndex';
 import Bookmarks from './pages/Bookmarks';
 import MonthlyTracker from './pages/MonthlyTracker';
+import AdminDashboard from './pages/AdminDashboard';
 import Layout from './components/Layout';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
                     <Route path="/juzs" element={<JuzIndex />} />
                     <Route path="/juz/monthly/:id" element={<MonthlyTracker />} />
                     <Route path="/bookmarks" element={<Bookmarks />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
             </Routes>
         </Router>

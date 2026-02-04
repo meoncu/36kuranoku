@@ -1,19 +1,25 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LogOut, BookOpen, User as UserIcon } from 'lucide-react';
+import { LogOut, BookOpen, User as UserIcon, ShieldCheck } from 'lucide-react';
 
 export default function Layout() {
     const { user, logout } = useAuth();
+    const isAdmin = user?.email === 'meoncu@gmail.com';
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <header className="sticky top-0 z-50 glass-card border-b border-white/5 px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <Link to="/" className="flex items-center gap-2">
                     <BookOpen className="text-secondary w-6 h-6" />
                     <h1 className="text-xl font-bold tracking-tight text-white">Kuran Takip</h1>
-                </div>
+                </Link>
 
                 <div className="flex items-center gap-3">
+                    {isAdmin && (
+                        <Link to="/admin" className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors mr-2" title="Yönetici Paneli">
+                            <ShieldCheck className="w-5 h-5" />
+                        </Link>
+                    )}
                     {user?.photoURL ? (
                         <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-white/20" />
                     ) : (
