@@ -33,4 +33,5 @@ export interface UserProfile {
     email: string;
     photoURL: string;
     createdAt: any;
+    city?: string; // For prayer times
 }

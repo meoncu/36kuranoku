@@ -18,16 +18,18 @@ export function useAuth() {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
 
-                        // Backfill existing users who don't have isApproved field
-                        if (data.isApproved === undefined) {
+                        // Backfill existing users who don't have isApproved or city field
+                        if (data.isApproved === undefined || data.city === undefined) {
                             const isAdmin = authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com';
+                            const updates: any = {};
+                            if (data.isApproved === undefined) updates.isApproved = isAdmin;
+                            if (data.city === undefined) updates.city = 'Ankara';
+
                             await setDoc(doc(db, 'users', authUser.uid), {
                                 ...data,
-                                isApproved: isAdmin // Auto-approve admin, others need approval
+                                ...updates
                             }, { merge: true });
-                            // The snapshot will fire again with the new data, so we don't need to setProfile here necessarily, 
-                            // but setting it speeds up UI slightly.
-                            setProfile({ ...data, isApproved: isAdmin });
+                            setProfile({ ...data, ...updates });
                         } else {
                             setProfile(data);
                         }
@@ -40,7 +42,8 @@ export function useAuth() {
                             photoURL: authUser.photoURL,
                             lastLogin: serverTimestamp(),
                             isApproved: authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com', // Auto-approve admin
-                            createdAt: serverTimestamp()
+                            createdAt: serverTimestamp(),
+                            city: 'Ankara' // Default city
                         };
 
                         // We use setDoc here. Since it didn't exist, we create it.

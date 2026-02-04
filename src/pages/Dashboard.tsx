@@ -3,18 +3,21 @@ import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, where, getDocs, addDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
-import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive, Trash2, Folder, FolderOpen, ChevronDown } from 'lucide-react';
+import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive, Trash2, Folder, FolderOpen, ChevronDown, Settings } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AddJuzModal from '../components/AddJuzModal';
 import EditJuzModal from '../components/EditJuzModal';
+import ProfileModal from '../components/ProfileModal';
+import PrayerTimes from '../components/PrayerTimes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CHAPTERS } from '../constants/chapters';
 
 export default function Dashboard() {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const navigate = useNavigate();
     const [juzler, setJuzler] = useState<Juz[]>([]);
     const [showModal, setShowModal] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Page Navigation State
@@ -396,7 +399,50 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6 pb-24">
+        <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 px-4">
+            {/* Profile Settings Modal */}
+            <AnimatePresence>
+                {showProfileModal && (
+                    <ProfileModal
+                        user={user}
+                        profile={profile}
+                        onClose={() => setShowProfileModal(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Header / User Profile */}
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                    <div
+                        onClick={() => setShowProfileModal(true)}
+                        className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-all cursor-pointer overflow-hidden group"
+                    >
+                        {profile?.photoURL ? (
+                            <img src={profile.photoURL} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                        ) : (
+                            <User className="w-5 h-5" />
+                        )}
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-white leading-tight">
+                            Merhaba, {profile?.displayName?.split(' ')[0] || 'Kullanıcı'}
+                        </h1>
+                        <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Bugün ne okuyoruz?</p>
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => setShowProfileModal(true)}
+                    className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white/40 hover:text-white transition-all border border-white/5 group"
+                >
+                    <Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+                </button>
+            </div>
+
+            {/* Prayer Times Section */}
+            <PrayerTimes city={profile?.city || 'Ankara'} />
+
             {/* Page Navigation Modal */}
             <AnimatePresence>
                 {showPageModal && (
