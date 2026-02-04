@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase';
-import { collection, getDocs, orderBy, query, limit, collectionGroup, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, limit, collectionGroup, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { Users, Activity, BookOpen, ShieldAlert, BadgeCheck, Search, LayoutGrid, List, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -22,17 +22,18 @@ export default function AdminDashboard() {
     const [stats, setStats] = useState({ totalUsers: 0, totalTrackers: 0, activeToday: 0 });
     const [filter, setFilter] = useState('');
 
+    const [error, setError] = useState('');
+
     useEffect(() => {
         if (!user || user.email !== ADMIN_EMAIL) return;
 
-        const fetchData = async () => {
-            try {
-                // Fetch Users
-                const usersRef = collection(db, 'users');
-                const usersSnap = await getDocs(usersRef);
-                const usersList = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Real-time Users Listener
+        const unsubscribeUsers = onSnapshot(
+            collection(db, 'users'),
+            (snapshot) => {
+                const usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-                // Sort users: Pending first, then by creation date
+                // Sort: Pending first, then newest
                 usersList.sort((a: any, b: any) => {
                     if (a.isApproved === b.isApproved) {
                         return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
@@ -41,35 +42,51 @@ export default function AdminDashboard() {
                 });
 
                 setUsers(usersList);
+                setError('');
+            },
+            (err) => {
+                console.error("Users listener error:", err);
+                setError('Kullanıcı listesi alınamadı. Yetkiniz yok veya bağlantı hatası.');
+            }
+        );
 
-                // Fetch Recent Activity
-                const recentTrackersQuery = query(
-                    collectionGroup(db, 'juzler'),
-                    orderBy('updatedAt', 'desc'),
-                    limit(20)
-                );
-                const activitySnap = await getDocs(recentTrackersQuery);
-                const activityList = activitySnap.docs.map(doc => {
+        // Real-time Activity Listener (Recent)
+        const recentTrackersQuery = query(
+            collectionGroup(db, 'juzler'),
+            orderBy('updatedAt', 'desc'),
+            limit(20)
+        );
+
+        const unsubscribeActivity = onSnapshot(
+            recentTrackersQuery,
+            (snapshot) => {
+                const activityList = snapshot.docs.map(doc => {
                     const data = doc.data();
                     return { id: doc.id, refPath: doc.ref.path, ...data };
                 });
                 setActivities(activityList);
-
-                setStats({
-                    totalUsers: usersList.length,
-                    totalTrackers: activitySnap.size,
-                    activeToday: activityList.filter((a: any) => {
-                        return a.updatedAt?.toDate().toDateString() === new Date().toDateString();
-                    }).length
-                });
-
-            } catch (error) {
-                console.error("Admin data fetch error:", error);
+            },
+            (err) => {
+                console.error("Activity listener error:", err);
             }
-        };
+        );
 
-        fetchData();
+        return () => {
+            unsubscribeUsers();
+            unsubscribeActivity();
+        };
     }, [user]);
+
+    // Update stats when data changes
+    useEffect(() => {
+        setStats({
+            totalUsers: users.length,
+            totalTrackers: activities.length,
+            activeToday: activities.filter((a: any) => {
+                return a.updatedAt?.toDate().toDateString() === new Date().toDateString();
+            }).length
+        });
+    }, [users, activities]);
 
     // Handle Tab Change manually to update URL if needed, but simplistic state is fine for now.
     // Ideally update URL too? Let's keep it simple. Only read on mount.
@@ -252,8 +269,8 @@ export default function AdminDashboard() {
                                                 <button
                                                     onClick={() => handleToggleStatus(u.id, u.isApproved)}
                                                     className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95 ${!u.isApproved
-                                                            ? 'bg-[#C59E57] hover:bg-[#b08d4b] text-white ring-2 ring-[#C59E57]/20 ring-offset-2 ring-offset-black'
-                                                            : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white'
+                                                        ? 'bg-[#C59E57] hover:bg-[#b08d4b] text-white ring-2 ring-[#C59E57]/20 ring-offset-2 ring-offset-black'
+                                                        : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white'
                                                         }`}
                                                 >
                                                     {!u.isApproved ? 'Onayla ve Aktif Et' : 'Pasife Al'}

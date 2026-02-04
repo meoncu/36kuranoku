@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'meoncu@gmail.com';
+    }
+
+    // Users Collection Rules
+    match /users/{userId} {
+      // Allow Read/Write if:
+      // 1. It's the user's own profile
+      // 2. OR the user is the Admin
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      
+      // Allow access to subcollections (like 'juzler')
+      match /juzler/{trackerId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      }
+    }
+    
+    // Explicitly allow listing users for Admin
+    // (This is covered by the catch-all read above usually, but ensuring clarity)
+  }
+}
