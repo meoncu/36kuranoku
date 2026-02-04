@@ -308,14 +308,22 @@ export default function Dashboard() {
                                                     <div>
                                                         <div className="flex items-center gap-3">
                                                             <h3 className="text-white font-bold text-lg">{juz.title}</h3>
-                                                            <span className="px-2 py-0.5 rounded-md bg-white/5 text-white/40 text-[10px] font-bold uppercase tracking-wider">
-                                                                {now.toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}
-                                                            </span>
                                                         </div>
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <span className="text-white/60 text-xs font-medium">Bu Ayın Hedefi:</span>
+                                                            {/* Dynamic Target Label */}
+                                                            <span className="text-white/60 text-xs font-medium">
+                                                                {now.toLocaleString('tr-TR', { month: 'long' })} Hedefi:
+                                                            </span>
                                                             <span className="bg-white/10 px-2 py-0.5 rounded text-white text-xs font-bold">{targetPage}. Sayfalar</span>
                                                         </div>
+
+                                                        {/* Start Date Info */}
+                                                        {juz.startMonth && (
+                                                            <div className="text-white/30 text-[10px] mt-1 font-medium">
+                                                                Başlangıç: {new Date(juz.startMonth).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}
+                                                            </div>
+                                                        )}
+
                                                         <div className="text-[#C59E57] text-xs font-bold mt-2">
                                                             {completedCount} / 30 Cüz Okundu
                                                         </div>
