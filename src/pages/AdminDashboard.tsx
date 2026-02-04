@@ -203,6 +203,23 @@ export default function AdminDashboard() {
             {/* Users Tab */}
             {activeTab === 'users' && (
                 <div className="glass-card rounded-3xl overflow-hidden border border-white/5">
+                    {/* Permission Hint for Developer */}
+                    {users.length <= 1 && !error && (
+                        <div className="bg-yellow-500/10 p-4 border-b border-yellow-500/20 flex items-start gap-3">
+                            <ShieldAlert className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                            <div className="text-sm text-yellow-200/80">
+                                <p className="font-bold text-yellow-500 mb-1">Diğer kullanıcılar görünmüyor mu?</p>
+                                <p>
+                                    Listede sadece kendinizi görüyorsanız, Firebase Güvenlik Kuralları (Firestore Rules)
+                                    yöneticiye "tüm kullanıcıları okuma" izni vermiyor olabilir.
+                                </p>
+                                <div className="mt-2 text-xs bg-black/20 p-2 rounded text-white/50 font-mono">
+                                    allow read: if request.auth.uid == userId || request.auth.token.email == 'meoncu@gmail.com';
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="p-4 border-b border-white/5 bg-white/5 flex items-center gap-4">
                         <Search className="w-5 h-5 text-white/30" />
                         <input
