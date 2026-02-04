@@ -47,7 +47,7 @@ export default function Dashboard() {
     };
 
     const lastActiveJuz = juzler
-        .filter(j => j.durum === 'devam-ediyor')
+        .filter(j => j.durum === 'devam-ediyor' && j.type !== 'monthly_page')
         .sort((a, b) => {
             const timeA = (a as any).updatedAt?.seconds || a.createdAt?.seconds || 0;
             const timeB = (b as any).updatedAt?.seconds || b.createdAt?.seconds || 0;
