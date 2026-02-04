@@ -371,12 +371,12 @@ export default function Dashboard() {
                                                             <span className="bg-white/10 px-2 py-0.5 rounded text-white text-xs font-bold">{targetPage}. Sayfalar</span>
                                                         </div>
 
-                                                        {/* Start Date Info */}
-                                                        {juz.startMonth && (
-                                                            <div className="text-white/30 text-[10px] mt-1 font-medium">
-                                                                Başlangıç: {new Date(juz.startMonth).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}
-                                                            </div>
-                                                        )}
+                                                        {/* Static Start Info */}
+                                                        <div className="text-white/30 text-[10px] mt-1 font-medium flex gap-2">
+                                                            <span>Başlangıç: {basePage}. Sayfa</span>
+                                                            <span>•</span>
+                                                            <span>{new Date(juz.startMonth || currentKey).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}</span>
+                                                        </div>
 
                                                         <div className="text-[#C59E57] text-xs font-bold mt-2">
                                                             {completedCount} / 30 Cüz Okundu
