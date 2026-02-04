@@ -16,7 +16,21 @@ export function useAuth() {
                 // Real-time listener for profile changes (approval status)
                 const unsubProfile = onSnapshot(doc(db, 'users', authUser.uid), async (docSnap) => {
                     if (docSnap.exists()) {
-                        setProfile(docSnap.data());
+                        const data = docSnap.data();
+
+                        // Backfill existing users who don't have isApproved field
+                        if (data.isApproved === undefined) {
+                            const isAdmin = authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com';
+                            await setDoc(doc(db, 'users', authUser.uid), {
+                                ...data,
+                                isApproved: isAdmin // Auto-approve admin, others need approval
+                            }, { merge: true });
+                            // The snapshot will fire again with the new data, so we don't need to setProfile here necessarily, 
+                            // but setting it speeds up UI slightly.
+                            setProfile({ ...data, isApproved: isAdmin });
+                        } else {
+                            setProfile(data);
+                        }
                     } else {
                         // New User Creation
                         const newProfile = {
