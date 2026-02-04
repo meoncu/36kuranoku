@@ -8,10 +8,11 @@ import JuzIndex from './pages/JuzIndex';
 import Bookmarks from './pages/Bookmarks';
 import MonthlyTracker from './pages/MonthlyTracker';
 import AdminDashboard from './pages/AdminDashboard';
+import PendingApproval from './pages/PendingApproval';
 import Layout from './components/Layout';
 
 function App() {
-    const { user, loading } = useAuth();
+    const { user, profile, loading } = useAuth(); // profile comes from useAuth
 
     if (loading) {
         return (
@@ -19,6 +20,11 @@ function App() {
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
+    }
+
+    // Check approval status
+    if (user && profile && profile.isApproved === false) {
+        return <PendingApproval />;
     }
 
     return (

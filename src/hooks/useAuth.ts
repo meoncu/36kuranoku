@@ -1,35 +1,72 @@
 import { useState, useEffect } from 'react';
 import { auth, googleProvider, db } from '../firebase';
 import { onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc, onSnapshot } from 'firebase/firestore';
 
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
+    const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // Save/Update user profile in Firestore
-                // We use setDoc with merge: true to avoid overwriting existing data fields like specific settings if we add them later
-                // But we want to update 'lastLogin' every time.
-                try {
-                    await setDoc(doc(db, 'users', user.uid), {
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName,
-                        photoURL: user.photoURL,
-                        lastLogin: serverTimestamp(),
-                    }, { merge: true });
-                } catch (error) {
-                    console.error("Error saving user profile:", error);
-                }
+        const unsubscribeAuth = onAuthStateChanged(auth, async (authUser) => {
+            if (authUser) {
+                setUser(authUser);
+
+                // Real-time listener for profile changes (approval status)
+                const unsubProfile = onSnapshot(doc(db, 'users', authUser.uid), async (docSnap) => {
+                    if (docSnap.exists()) {
+                        setProfile(docSnap.data());
+                    } else {
+                        // New User Creation
+                        const newProfile = {
+                            uid: authUser.uid,
+                            email: authUser.email,
+                            displayName: authUser.displayName,
+                            photoURL: authUser.photoURL,
+                            lastLogin: serverTimestamp(),
+                            isApproved: authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com', // Auto-approve admin
+                            createdAt: serverTimestamp()
+                        };
+
+                        // We use setDoc here. Since it didn't exist, we create it.
+                        await setDoc(doc(db, 'users', authUser.uid), newProfile);
+                        setProfile(newProfile);
+                    }
+                    setLoading(false);
+                });
+
+                // Update last login if profile exists (We do this once per auth session start mainly)
+                // Actually, let's just do a fire-and-forget update
+                updateLastLogin(authUser);
+
+                return () => {
+                    unsubProfile();
+                };
+            } else {
+                setUser(null);
+                setProfile(null);
+                setLoading(false);
             }
-            setUser(user);
-            setLoading(false);
         });
-        return unsubscribe;
+
+        return () => unsubscribeAuth();
     }, []);
+
+    const updateLastLogin = async (user: User) => {
+        try {
+            // We use updateDoc but need to be sure it exists. setDoc with merge is safer for "upsert" logic 
+            // but we handled creation in the listener callback logic mostly.
+            // Let's just do a merge set to update lastLogin
+            await setDoc(doc(db, 'users', user.uid), {
+                lastLogin: serverTimestamp(),
+                photoURL: user.photoURL, // Keep photo sync
+                displayName: user.displayName
+            }, { merge: true });
+        } catch (e) {
+            console.error("Update login error", e);
+        }
+    }
 
     const login = async () => {
         try {
@@ -41,5 +78,5 @@ export function useAuth() {
 
     const logout = () => signOut(auth);
 
-    return { user, loading, login, logout };
+    return { user, profile, loading, login, logout };
 }

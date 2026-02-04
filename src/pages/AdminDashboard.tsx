@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase';
-import { collection, getDocs, orderBy, query, limit, collectionGroup, where } from 'firebase/firestore';
-import { Users, Activity, BookOpen, ShieldAlert, BadgeCheck, Search, LayoutGrid, List } from 'lucide-react';
+import { collection, getDocs, orderBy, query, limit, collectionGroup, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { Users, Activity, BookOpen, ShieldAlert, BadgeCheck, Search, LayoutGrid, List, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Navigate } from 'react-router-dom';
 
@@ -60,6 +60,21 @@ export default function AdminDashboard() {
 
         fetchData();
     }, [user]);
+
+    const handleApprove = async (userId: string) => {
+        if (!confirm('Bu kullanıcıyı onaylamak istiyor musunuz?')) return;
+        try {
+            await updateDoc(doc(db, 'users', userId), {
+                isApproved: true,
+                approvedAt: serverTimestamp()
+            });
+            // Optimistic update
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, isApproved: true } : u));
+        } catch (error) {
+            console.error("Error approving user:", error);
+            alert("Onay işlemi başarısız oldu.");
+        }
+    };
 
     if (loading) return null;
     if (user?.email !== ADMIN_EMAIL) return <Navigate to="/" />;
@@ -157,9 +172,9 @@ export default function AdminDashboard() {
                             <thead className="bg-white/5 text-white font-bold uppercase text-xs tracking-wider">
                                 <tr>
                                     <th className="p-4">Kullanıcı</th>
-                                    <th className="p-4">Email</th>
+                                    <th className="p-4">Durum</th>
                                     <th className="p-4">Son Giriş</th>
-                                    <th className="p-4">Kayıt ID</th>
+                                    <th className="p-4 text-right">İşlemler</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -176,11 +191,35 @@ export default function AdminDashboard() {
                                                     <Users className="w-4 h-4" />
                                                 </div>
                                             )}
-                                            <span className="font-bold text-white">{u.displayName || 'İsimsiz'}</span>
+                                            <div>
+                                                <div className="font-bold text-white">{u.displayName || 'İsimsiz'}</div>
+                                                <div className="font-mono text-xs opacity-50">{u.email}</div>
+                                            </div>
                                         </td>
-                                        <td className="p-4 font-mono text-xs">{u.email}</td>
+                                        <td className="p-4">
+                                            {u.isApproved ? (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-500 font-bold text-xs">
+                                                    <CheckCircle className="w-3.5 h-3.5" />
+                                                    Onaylı
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-500/10 text-yellow-500 font-bold text-xs animate-pulse">
+                                                    <XCircle className="w-3.5 h-3.5" />
+                                                    Bekliyor
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="p-4">{u.lastLogin?.toDate().toLocaleString('tr-TR')}</td>
-                                        <td className="p-4 font-mono text-xs text-white/30 truncate max-w-[100px]">{u.uid}</td>
+                                        <td className="p-4 text-right">
+                                            {!u.isApproved && (
+                                                <button
+                                                    onClick={() => handleApprove(u.id)}
+                                                    className="px-3 py-1.5 bg-[#C59E57] hover:bg-[#b08d4b] text-white rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95"
+                                                >
+                                                    Onayla
+                                                </button>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
