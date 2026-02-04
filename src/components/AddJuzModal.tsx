@@ -20,8 +20,35 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
     const [assignedPage, setAssignedPage] = useState(1);
     const [startMonth, setStartMonth] = useState(() => {
         const now = new Date();
-        return `${now.getFullYear()}-01`; // Always defaults to January of current year
+        return `${now.getFullYear()}-01`;
     });
+
+    // Helpers for Monthly Logic
+    const currentYear = new Date().getFullYear();
+    const currentMonthIndex = new Date().getMonth(); // 0-11
+    const selectedYear = parseInt(startMonth.split('-')[0]);
+    const isCurrentYear = selectedYear === currentYear;
+
+    // Get Turkish Month Name
+    const currentMonthName = new Date().toLocaleDateString('tr-TR', { month: 'long' });
+
+    // Calculate January Base Page from Input
+    const calculateJanPage = (inputPage: number) => {
+        if (!isCurrentYear) return inputPage; // If not this year, assume input IS Jan
+
+        // Formula: Jan = (Input - diff)
+        // Modulo math for wrapping: ((a % n) + n) % n
+        // diff is currentMonthIndex (since Jan is 0)
+        // Example: Month = Feb (1). Input = 11. Jan = 11 - 1 = 10.
+        // Example: Month = Jan (0). Input = 11. Jan = 11.
+        // Example: Month = Mar (2). Input = 1. Jan = 1 - 2 = -1 -> 19.
+
+        const diff = currentMonthIndex;
+        // Logic: (Input - 1 (to make 0-indexed) - diff)
+        let val = (inputPage - 1 - diff);
+        val = ((val % 20) + 20) % 20; // Wrap 0-19
+        return val + 1; // Back to 1-20
+    };
 
     const [title, setTitle] = useState('');
     const [assignedBy, setAssignedBy] = useState('');
@@ -60,9 +87,6 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     let startPage = (jNo === 1) ? 1 : ((jNo - 1) * 20) + 2;
                     let endPage = startPage + 19;
 
-                    // Smart Title Logic
-                    // If user wrote "Ramazan", it becomes "Ramazan - 5. Cüz"
-                    // If title is empty, it becomes "5. Cüz"
                     let finalTitle = title ? `${title} (${jNo}. Cüz)` : `${jNo}. Cüz`;
 
                     promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
@@ -110,7 +134,8 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     }));
                 }
             } else if (selectionType === 'monthly_page') {
-                let finalTitle = title || `Aylık Cüz Takibi (${assignedPage}. Sayfa)`;
+                let finalTitle = title || `Aylık Hatim - ${new Date(startMonth).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}`;
+
                 promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
                     type: 'monthly_page',
                     juzNo: 0,
@@ -126,7 +151,7 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     assignedBy: assignedBy,
                     notes: notes,
                     createdAt: serverTimestamp(),
-                    assignedPage: assignedPage,
+                    assignedPage: calculateJanPage(assignedPage),
                     startMonth: startMonth,
                     monthlyProgress: {}
                 }));
@@ -277,8 +302,14 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     {selectionType === 'monthly_page' && (
                         <div className="space-y-4">
                             <div>
-                                <label className="text-sm text-white/50 mb-1 block">Ocak Ayı Sayfa Hedefi</label>
-                                <p className="text-[10px] text-white/40 mb-2">Ocak ayında okumanız gereken sayfa numarasını giriniz. Diğer aylar buna göre hesaplanır.</p>
+                                <label className="text-sm text-white/50 mb-1 block">
+                                    {isCurrentYear ? `${currentMonthName} Ayı Sayfa Hedefi` : 'Ocak Ayı Sayfa Hedefi'}
+                                </label>
+                                <p className="text-[10px] text-white/40 mb-2">
+                                    {isCurrentYear
+                                        ? `${currentMonthName} ayında okumanız gereken sayfayı girin. Sistem otomatik olarak Ocak başlangıcını ayarlayacaktır.`
+                                        : 'Ocak ayında okumanız gereken sayfa numarasını giriniz.'}
+                                </p>
                                 <input
                                     type="number"
                                     min="1"
@@ -301,57 +332,32 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
                                     />
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-xs">
-                                        Ocak'tan Başlar
+                                        Otomatik Ocak Başlangıç
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-
-
                     <div>
-                        <label className="text-sm text-white/50 mb-1 block">Atayan Kişi veya Grup (Opsiyonel)</label>
-                        <input
-                            type="text"
-                            placeholder="Örn: Hatim Grubu, Ahmet"
-                            value={assignedBy}
-                            onChange={(e) => setAssignedBy(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-sm text-white/50 mb-1 block">Notlar (Opsiyonel)</label>
+                        <label className="text-sm text-white/50 mb-1 block">Notlar (İsteğe bağlı)</label>
                         <textarea
-                            rows={3}
-                            placeholder="Örn: 5 gün içinde bitecek..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary resize-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-sm text-white/50 mb-1 block">Hedef Bitiş Tarihi</label>
-                        <input
-                            type="date"
-                            required
-                            value={targetDate}
-                            onChange={(e) => setTargetDate(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary [color-scheme:dark]"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary min-h-[80px]"
+                            placeholder="Notlarınız..."
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn-secondary w-full py-4 mt-4 flex items-center justify-center"
+                        className="w-full bg-[#C59E57] hover:bg-[#b08d4b] text-white rounded-xl py-4 font-bold text-sm transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Cüzü Başlat"}
+                        {loading ? 'Ekleniyor...' : 'Takibi Başlat'}
                     </button>
                 </form>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 }
