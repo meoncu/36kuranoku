@@ -89,6 +89,21 @@ export default function AdminDashboard() {
                         Yönetici Paneli
                     </h1>
                     <p className="text-white/50">Tüm kullanıcı hareketleri ve sistem durumu</p>
+
+                    {users.some(u => !u.isApproved) && (
+                        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 animate-pulse">
+                            <ShieldAlert className="text-red-500 w-5 h-5 shrink-0" />
+                            <span className="text-red-500 font-bold text-sm">
+                                {users.filter(u => !u.isApproved).length} kullanıcı onay bekliyor!
+                            </span>
+                            <button
+                                onClick={() => setActiveTab('users')}
+                                className="ml-auto text-xs bg-red-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-red-600 transition-colors"
+                            >
+                                İncele
+                            </button>
+                        </div>
+                    )}
                 </div>
                 <div className="flex bg-white/5 p-1 rounded-xl">
                     <button
