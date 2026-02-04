@@ -13,53 +13,59 @@ export function useAuth() {
             if (authUser) {
                 setUser(authUser);
 
-                // Real-time listener for profile changes (approval status)
-                const unsubProfile = onSnapshot(doc(db, 'users', authUser.uid), async (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
+                const userRef = doc(db, 'users', authUser.uid);
 
-                        // Backfill existing users who don't have isApproved or city field
-                        if (data.isApproved === undefined || data.city === undefined) {
-                            const isAdmin = authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com';
-                            const updates: any = {};
-                            if (data.isApproved === undefined) updates.isApproved = isAdmin;
-                            if (data.city === undefined) updates.city = 'Ankara';
+                try {
+                    const docSnap = await getDoc(userRef);
 
-                            await setDoc(doc(db, 'users', authUser.uid), {
-                                ...data,
-                                ...updates
-                            }, { merge: true });
-                            setProfile({ ...data, ...updates });
-                        } else {
-                            setProfile(data);
-                        }
-                    } else {
-                        // New User Creation
+                    if (!docSnap.exists()) {
                         const newProfile = {
                             uid: authUser.uid,
                             email: authUser.email,
                             displayName: authUser.displayName,
                             photoURL: authUser.photoURL,
                             lastLogin: serverTimestamp(),
-                            isApproved: authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com', // Auto-approve admin
+                            isApproved: authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com',
                             createdAt: serverTimestamp(),
-                            city: 'Ankara' // Default city
+                            city: 'Ankara'
+                        };
+                        await setDoc(userRef, newProfile);
+                        setProfile(newProfile);
+                    } else {
+                        const data = docSnap.data();
+                        const updates: any = {
+                            lastLogin: serverTimestamp(),
+                            photoURL: authUser.photoURL
                         };
 
-                        // We use setDoc here. Since it didn't exist, we create it.
-                        await setDoc(doc(db, 'users', authUser.uid), newProfile);
-                        setProfile(newProfile);
+                        let needsUpdate = false;
+                        if (data.isApproved === undefined) {
+                            updates.isApproved = authUser.email === 'meoncu@gmail.com' || authUser.email === 'test@example.com';
+                            needsUpdate = true;
+                        }
+                        if (data.city === undefined) {
+                            updates.city = 'Ankara';
+                            needsUpdate = true;
+                        }
+
+                        // Always update lastLogin & photo
+                        await setDoc(userRef, updates, { merge: true });
+                        setProfile({ ...data, ...updates });
                     }
-                    setLoading(false);
+                } catch (err) {
+                    console.error("Profile load error:", err);
+                }
+
+                setLoading(false);
+
+                // Real-time listener for profile changes (approval status, name updates, etc.)
+                const unsubProfile = onSnapshot(userRef, (snap) => {
+                    if (snap.exists()) {
+                        setProfile({ id: snap.id, ...snap.data() });
+                    }
                 });
 
-                // Update last login if profile exists (We do this once per auth session start mainly)
-                // Actually, let's just do a fire-and-forget update
-                updateLastLogin(authUser);
-
-                return () => {
-                    unsubProfile();
-                };
+                return () => unsubProfile();
             } else {
                 setUser(null);
                 setProfile(null);
@@ -69,21 +75,6 @@ export function useAuth() {
 
         return () => unsubscribeAuth();
     }, []);
-
-    const updateLastLogin = async (user: User) => {
-        try {
-            // We use updateDoc but need to be sure it exists. setDoc with merge is safer for "upsert" logic 
-            // but we handled creation in the listener callback logic mostly.
-            // Let's just do a merge set to update lastLogin
-            await setDoc(doc(db, 'users', user.uid), {
-                lastLogin: serverTimestamp(),
-                photoURL: user.photoURL, // Keep photo sync
-                displayName: user.displayName
-            }, { merge: true });
-        } catch (e) {
-            console.error("Update login error", e);
-        }
-    }
 
     const login = async () => {
         try {
