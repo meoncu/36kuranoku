@@ -12,49 +12,30 @@ interface AddJuzModalProps {
 export default function AddJuzModal({ onClose }: AddJuzModalProps) {
     const { user } = useAuth();
     const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page'>('juz');
-    const [selectedJuzs, setSelectedJuzs] = useState<number[]>([1]); // Changed from single number to array
+    const [selectedJuzs, setSelectedJuzs] = useState<number[]>([1]);
     const [selectedSurahId, setSelectedSurahId] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // New state for Monthly Page Tracking
+    // Monthly Page Tracking Logic
     const [assignedPage, setAssignedPage] = useState(1);
+    // Default to January of Current Year per user request
     const [startMonth, setStartMonth] = useState(() => {
         const now = new Date();
         return `${now.getFullYear()}-01`;
     });
-
-    // Helpers for Monthly Logic
-    const currentYear = new Date().getFullYear();
-    const currentMonthIndex = new Date().getMonth(); // 0-11
-    const selectedYear = parseInt(startMonth.split('-')[0]);
-    const isCurrentYear = selectedYear === currentYear;
-
-    // Get Turkish Month Name
-    const currentMonthName = new Date().toLocaleDateString('tr-TR', { month: 'long' });
-
-    // Calculate January Base Page from Input
-    const calculateJanPage = (inputPage: number) => {
-        if (!isCurrentYear) return inputPage; // If not this year, assume input IS Jan
-
-        // Formula: Jan = (Input - diff)
-        // Modulo math for wrapping: ((a % n) + n) % n
-        // diff is currentMonthIndex (since Jan is 0)
-        // Example: Month = Feb (1). Input = 11. Jan = 11 - 1 = 10.
-        // Example: Month = Jan (0). Input = 11. Jan = 11.
-        // Example: Month = Mar (2). Input = 1. Jan = 1 - 2 = -1 -> 19.
-
-        const diff = currentMonthIndex;
-        // Logic: (Input - 1 (to make 0-indexed) - diff)
-        let val = (inputPage - 1 - diff);
-        val = ((val % 20) + 20) % 20; // Wrap 0-19
-        return val + 1; // Back to 1-20
-    };
 
     const [title, setTitle] = useState('');
     const [assignedBy, setAssignedBy] = useState('');
     const [notes, setNotes] = useState('');
     const [targetDate, setTargetDate] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const getReadableStartMonth = () => {
+        if (!startMonth) return '';
+        const [y, m] = startMonth.split('-');
+        const date = new Date(parseInt(y), parseInt(m) - 1);
+        return date.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+    };
 
     const toggleJuzSelection = (juz: number) => {
         setSelectedJuzs(prev => {
@@ -82,11 +63,9 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     return;
                 }
 
-                // Create a doc for EACH selected juz
                 for (const jNo of selectedJuzs) {
                     let startPage = (jNo === 1) ? 1 : ((jNo - 1) * 20) + 2;
                     let endPage = startPage + 19;
-
                     let finalTitle = title ? `${title} (${jNo}. Cüz)` : `${jNo}. Cüz`;
 
                     promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
@@ -134,14 +113,15 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     }));
                 }
             } else if (selectionType === 'monthly_page') {
-                let finalTitle = title || `Aylık Hatim - ${new Date(startMonth).toLocaleString('tr-TR', { month: 'long', year: 'numeric' })}`;
+                // Use input directly
+                let finalTitle = title || `Aylık Hatim - ${getReadableStartMonth()}`;
 
                 promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
                     type: 'monthly_page',
                     juzNo: 0,
                     surahId: 0,
                     title: finalTitle,
-                    toplamSayfa: 30, // 30 Juzs
+                    toplamSayfa: 30,
                     startPage: 0,
                     endPage: 0,
                     baslangicTarihi: serverTimestamp(),
@@ -151,8 +131,8 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                     assignedBy: assignedBy,
                     notes: notes,
                     createdAt: serverTimestamp(),
-                    assignedPage: calculateJanPage(assignedPage),
-                    startMonth: startMonth,
+                    assignedPage: assignedPage, // Explicit User Input
+                    startMonth: startMonth,     // Explicit User Input
                     monthlyProgress: {}
                 }));
             }
@@ -160,7 +140,6 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
             await Promise.all(promises);
 
             onClose();
-            // Reset form
             setTitle('');
             setNotes('');
             setAssignedBy('');
@@ -194,24 +173,9 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                 <h2 className="text-xl font-bold text-white mb-6">Yeni Takip Ekle</h2>
 
                 <div className="flex bg-white/5 p-1 rounded-xl mb-6">
-                    <button
-                        onClick={() => setSelectionType('juz')}
-                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectionType === 'juz' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
-                    >
-                        Cüz
-                    </button>
-                    <button
-                        onClick={() => setSelectionType('surah')}
-                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectionType === 'surah' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
-                    >
-                        Sure
-                    </button>
-                    <button
-                        onClick={() => setSelectionType('monthly_page')}
-                        className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectionType === 'monthly_page' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
-                    >
-                        Aylık
-                    </button>
+                    <button onClick={() => setSelectionType('juz')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectionType === 'juz' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Cüz</button>
+                    <button onClick={() => setSelectionType('surah')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectionType === 'surah' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Sure</button>
+                    <button onClick={() => setSelectionType('monthly_page')} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${selectionType === 'monthly_page' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Aylık</button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -231,23 +195,10 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                             <div className="flex items-center justify-between">
                                 <label className="text-sm text-white/50 block">Cüz Numaraları ({selectedJuzs.length} Seçili)</label>
                                 <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={handleSelectAll}
-                                        className="text-[10px] bg-[#C59E57]/20 text-[#C59E57] px-2 py-1 rounded hover:bg-[#C59E57] hover:text-white transition-colors"
-                                    >
-                                        Hatim (Hepsi)
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedJuzs([])}
-                                        className="text-[10px] bg-white/5 text-white/50 px-2 py-1 rounded hover:bg-white/10 transition-colors"
-                                    >
-                                        Temizle
-                                    </button>
+                                    <button type="button" onClick={handleSelectAll} className="text-[10px] bg-[#C59E57]/20 text-[#C59E57] px-2 py-1 rounded hover:bg-[#C59E57] hover:text-white transition-colors">Hatim (Hepsi)</button>
+                                    <button type="button" onClick={() => setSelectedJuzs([])} className="text-[10px] bg-white/5 text-white/50 px-2 py-1 rounded hover:bg-white/10 transition-colors">Temizle</button>
                                 </div>
                             </div>
-
                             <div className="grid grid-cols-6 gap-2 bg-white/5 p-2 rounded-xl">
                                 {Array.from({ length: 30 }, (_, i) => i + 1).map(jNo => (
                                     <button
@@ -276,16 +227,12 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                                     className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-secondary transition-colors"
                                 />
                             </div>
-
                             <div className="max-h-40 overflow-y-auto bg-black/20 border border-white/5 rounded-xl mt-2 custom-scrollbar">
                                 {CHAPTERS.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.toString().includes(searchQuery)).map(chapter => (
                                     <button
                                         key={chapter.id}
                                         type="button"
-                                        onClick={() => {
-                                            setSelectedSurahId(chapter.id);
-                                            setTitle(`${chapter.name} Suresi`);
-                                        }}
+                                        onClick={() => { setSelectedSurahId(chapter.id); setTitle(`${chapter.name} Suresi`); }}
                                         className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-white/5 transition-colors ${selectedSurahId === chapter.id ? 'bg-[#C59E57]/20 text-[#C59E57]' : 'text-white/80'}`}
                                     >
                                         <span>{chapter.id}. {chapter.name}</span>
@@ -303,12 +250,25 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                         <div className="space-y-4">
                             <div>
                                 <label className="text-sm text-white/50 mb-1 block">
-                                    {isCurrentYear ? `${currentMonthName} Ayı Sayfa Hedefi` : 'Ocak Ayı Sayfa Hedefi'}
+                                    Başlangıç Ayı
                                 </label>
                                 <p className="text-[10px] text-white/40 mb-2">
-                                    {isCurrentYear
-                                        ? `${currentMonthName} ayında okumanız gereken sayfayı girin. Sistem otomatik olarak Ocak başlangıcını ayarlayacaktır.`
-                                        : 'Ocak ayında okumanız gereken sayfa numarasını giriniz.'}
+                                    Takibi başlatmak istediğiniz ay. Geçmiş bir ay seçerseniz o aydan itibaren hesaplama yapılır.
+                                </p>
+                                <input
+                                    type="month"
+                                    value={startMonth}
+                                    onChange={(e) => setStartMonth(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary color-scheme-dark"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm text-white/50 mb-1 block">
+                                    Başlangıç Ayı Sayfa Hedefi ({getReadableStartMonth()})
+                                </label>
+                                <p className="text-[10px] text-white/40 mb-2">
+                                    Seçtiğiniz başlangıç ayında (genelde Ocak) hangi sayfayı okumak istiyorsunuz?
                                 </p>
                                 <input
                                     type="number"
@@ -318,23 +278,6 @@ export default function AddJuzModal({ onClose }: AddJuzModalProps) {
                                     onChange={(e) => setAssignedPage(Number(e.target.value))}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
                                 />
-                            </div>
-
-                            <div>
-                                <label className="text-sm text-white/50 mb-1 block">Takip Yılı</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        min="2024"
-                                        max="2030"
-                                        value={startMonth.split('-')[0]} // Extract year
-                                        onChange={(e) => setStartMonth(`${e.target.value}-01`)} // Always set to Jan
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
-                                    />
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 text-xs">
-                                        Otomatik Ocak Başlangıç
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     )}
