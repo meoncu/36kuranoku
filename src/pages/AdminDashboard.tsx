@@ -2,18 +2,24 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../firebase';
 import { collection, getDocs, orderBy, query, limit, collectionGroup, where, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { Users, Activity, BookOpen, ShieldAlert, BadgeCheck, Search, LayoutGrid, List, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Activity, BookOpen, ShieldAlert, BadgeCheck, Search, LayoutGrid, List, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 
 const ADMIN_EMAIL = 'meoncu@gmail.com';
 
 export default function AdminDashboard() {
     const { user, loading } = useAuth();
+    const [searchParams] = useSearchParams();
+
+    // Initialize tab from URL or default to overview
+    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'activity'>(
+        (searchParams.get('tab') as 'overview' | 'users' | 'activity') || 'overview'
+    );
+
     const [users, setUsers] = useState<any[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
     const [stats, setStats] = useState({ totalUsers: 0, totalTrackers: 0, activeToday: 0 });
-    const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'activity'>('overview');
     const [filter, setFilter] = useState('');
 
     useEffect(() => {
@@ -25,10 +31,18 @@ export default function AdminDashboard() {
                 const usersRef = collection(db, 'users');
                 const usersSnap = await getDocs(usersRef);
                 const usersList = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Sort users: Pending first, then by creation date
+                usersList.sort((a: any, b: any) => {
+                    if (a.isApproved === b.isApproved) {
+                        return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
+                    }
+                    return a.isApproved ? 1 : -1;
+                });
+
                 setUsers(usersList);
 
-                // Fetch Recent Activity (Trackers updated recently)
-                // Note: collectionGroup requires an index usually, but for small data might work or error explicitly
+                // Fetch Recent Activity
                 const recentTrackersQuery = query(
                     collectionGroup(db, 'juzler'),
                     orderBy('updatedAt', 'desc'),
@@ -37,17 +51,13 @@ export default function AdminDashboard() {
                 const activitySnap = await getDocs(recentTrackersQuery);
                 const activityList = activitySnap.docs.map(doc => {
                     const data = doc.data();
-                    // We try to find the owner from our user list if possible, or use data if stored
-                    // Standard Firestore doesn't join. We can map locally.
                     return { id: doc.id, refPath: doc.ref.path, ...data };
                 });
                 setActivities(activityList);
 
                 setStats({
                     totalUsers: usersList.length,
-                    totalTrackers: activitySnap.size, // This is just recent, not total. Total needs separate count or aggregation query.
-                    // Accurate total count requires aggregation queries which are paid/complex. 
-                    // We'll just show 'Recent Active' count for now.
+                    totalTrackers: activitySnap.size,
                     activeToday: activityList.filter((a: any) => {
                         return a.updatedAt?.toDate().toDateString() === new Date().toDateString();
                     }).length
@@ -61,18 +71,24 @@ export default function AdminDashboard() {
         fetchData();
     }, [user]);
 
-    const handleApprove = async (userId: string) => {
-        if (!confirm('Bu kullanıcıyı onaylamak istiyor musunuz?')) return;
+    // Handle Tab Change manually to update URL if needed, but simplistic state is fine for now.
+    // Ideally update URL too? Let's keep it simple. Only read on mount.
+
+    const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+        const action = currentStatus ? 'pasif' : 'aktif';
+        if (!confirm(`Bu kullanıcıyı ${action} duruma getirmek istiyor musunuz?`)) return;
+
         try {
             await updateDoc(doc(db, 'users', userId), {
-                isApproved: true,
-                approvedAt: serverTimestamp()
+                isApproved: !currentStatus,
+                approvedAt: !currentStatus ? serverTimestamp() : null
             });
+
             // Optimistic update
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, isApproved: true } : u));
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, isApproved: !currentStatus } : u));
         } catch (error) {
-            console.error("Error approving user:", error);
-            alert("Onay işlemi başarısız oldu.");
+            console.error(`Error turning user ${action}:`, error);
+            alert("İşlem başarısız oldu.");
         }
     };
 
@@ -91,17 +107,15 @@ export default function AdminDashboard() {
                     <p className="text-white/50">Tüm kullanıcı hareketleri ve sistem durumu</p>
 
                     {users.some(u => !u.isApproved) && (
-                        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 animate-pulse">
+                        <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 animate-pulse cursor-pointer hover:bg-red-500/20 transition-colors"
+                            onClick={() => setActiveTab('users')}>
                             <ShieldAlert className="text-red-500 w-5 h-5 shrink-0" />
                             <span className="text-red-500 font-bold text-sm">
                                 {users.filter(u => !u.isApproved).length} kullanıcı onay bekliyor!
                             </span>
-                            <button
-                                onClick={() => setActiveTab('users')}
-                                className="ml-auto text-xs bg-red-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-red-600 transition-colors"
-                            >
+                            <span className="ml-auto text-xs bg-red-500 text-white px-3 py-1 rounded-lg font-bold">
                                 İncele
-                            </button>
+                            </span>
                         </div>
                     )}
                 </div>
@@ -187,9 +201,9 @@ export default function AdminDashboard() {
                             <thead className="bg-white/5 text-white font-bold uppercase text-xs tracking-wider">
                                 <tr>
                                     <th className="p-4">Kullanıcı</th>
+                                    <th className="p-4">Kayıt Tarihi</th>
                                     <th className="p-4">Durum</th>
-                                    <th className="p-4">Son Giriş</th>
-                                    <th className="p-4 text-right">İşlemler</th>
+                                    <th className="p-4 text-right">Yönetim</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -197,7 +211,7 @@ export default function AdminDashboard() {
                                     (u.email?.toLowerCase() || '').includes(filter.toLowerCase()) ||
                                     (u.displayName?.toLowerCase() || '').includes(filter.toLowerCase())
                                 ).map(u => (
-                                    <tr key={u.id} className="hover:bg-white/5 transition-colors">
+                                    <tr key={u.id} className={`hover:bg-white/5 transition-colors ${!u.isApproved ? 'bg-red-500/5' : ''}`}>
                                         <td className="p-4 flex items-center gap-3">
                                             {u.photoURL ? (
                                                 <img src={u.photoURL} className="w-8 h-8 rounded-full bg-white/10" alt="" />
@@ -212,26 +226,37 @@ export default function AdminDashboard() {
                                             </div>
                                         </td>
                                         <td className="p-4">
+                                            <div className="flex items-center gap-2 text-xs">
+                                                <Clock className="w-3 h-3 text-white/30" />
+                                                {u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('tr-TR') : '-'}
+                                                <span className="text-white/30 text-[10px]">
+                                                    ({u.createdAt?.toDate ? u.createdAt.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''})
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
                                             {u.isApproved ? (
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-500 font-bold text-xs">
                                                     <CheckCircle className="w-3.5 h-3.5" />
-                                                    Onaylı
+                                                    Aktif User
                                                 </span>
                                             ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-500/10 text-yellow-500 font-bold text-xs animate-pulse">
+                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-500 font-bold text-xs animate-pulse">
                                                     <XCircle className="w-3.5 h-3.5" />
-                                                    Bekliyor
+                                                    Onay Bekliyor
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="p-4">{u.lastLogin?.toDate().toLocaleString('tr-TR')}</td>
                                         <td className="p-4 text-right">
-                                            {!u.isApproved && (
+                                            {u.email !== ADMIN_EMAIL && (
                                                 <button
-                                                    onClick={() => handleApprove(u.id)}
-                                                    className="px-3 py-1.5 bg-[#C59E57] hover:bg-[#b08d4b] text-white rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95"
+                                                    onClick={() => handleToggleStatus(u.id, u.isApproved)}
+                                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95 ${!u.isApproved
+                                                            ? 'bg-[#C59E57] hover:bg-[#b08d4b] text-white ring-2 ring-[#C59E57]/20 ring-offset-2 ring-offset-black'
+                                                            : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white'
+                                                        }`}
                                                 >
-                                                    Onayla
+                                                    {!u.isApproved ? 'Onayla ve Aktif Et' : 'Pasife Al'}
                                                 </button>
                                             )}
                                         </td>

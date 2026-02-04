@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { db } from '../firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
-import { X, Search } from 'lucide-react';
+import { X, Search, Trash2 } from 'lucide-react';
 import { Juz } from '../types';
 import { CHAPTERS } from '../constants/chapters';
 
@@ -34,6 +34,22 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
     const [targetDate, setTargetDate] = useState(initialDate);
 
     const [loading, setLoading] = useState(false);
+
+    const handleDelete = async () => {
+        if (!user || !juz.id) return;
+
+        if (window.confirm('Bu takibi tamamen silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+            try {
+                setLoading(true);
+                await deleteDoc(doc(db, 'users', user.uid, 'juzler', juz.id));
+                onClose();
+            } catch (error) {
+                console.error("Error deleting document:", error);
+                alert("Silme işlemi başarısız oldu.");
+                setLoading(false);
+            }
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -264,13 +280,23 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                         />
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn-secondary w-full py-4 mt-4 flex items-center justify-center"
-                    >
-                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Güncelle"}
-                    </button>
+                    <div className="p-4 border-t border-white/10 flex items-center justify-between gap-3 bg-black/40">
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-sm transition-all"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Sil
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 bg-[#C59E57] hover:bg-[#b08d4b] text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
+                        >
+                            {loading ? 'Kaydediliyor...' : 'Kaydet'}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

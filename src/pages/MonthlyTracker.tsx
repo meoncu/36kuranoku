@@ -225,27 +225,29 @@ export default function MonthlyTracker() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: juzIndex * 0.02 }}
-                            className={`glass - card p - 4 rounded - 2xl flex items - center justify - between border transition - all ${isRead ? 'border-green-500/30 bg-green-500/5' : 'border-white/5 hover:bg-white/5'} `}
+                            className={`glass-card p-4 rounded-2xl flex items-center gap-4 border transition-all group ${isRead ? 'border-green-500/30 bg-green-500/5' : 'border-white/5 hover:bg-white/5'}`}
                         >
-                            <div className="flex items-center gap-4">
-                                <div className={`w - 10 h - 10 rounded - xl flex items - center justify - center font - bold text - sm ${isRead ? 'bg-green-500/20 text-green-500' : 'bg-white/5 text-white/50'} `}>
-                                    {juzIndex}
-                                </div>
-                                <div>
-                                    <h3 className={`font - bold text - sm ${isRead ? 'text-green-500' : 'text-white'} `}>
-                                        {juzIndex}. Cüz
-                                    </h3>
-                                    <p className="text-[10px] text-white/40 font-medium">
-                                        Hedef: {targetPage}. Sayfa
-                                    </p>
-                                </div>
+                            {/* Number Box */}
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner ${isRead ? 'bg-green-500/20 text-green-500' : 'bg-black/20 text-white/30 group-hover:text-white/70'} transition-colors`}>
+                                {juzIndex}
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            {/* Text Info - Flex 1 to push actions */}
+                            <div className="flex-1 min-w-0">
+                                <h3 className={`font-bold text-base mb-0.5 ${isRead ? 'text-green-500' : 'text-white'}`}>
+                                    {juzIndex}. Cüz
+                                </h3>
+                                <p className="text-xs text-white/40 font-medium truncate">
+                                    Hedef: <span className="text-white/60">{targetPage}. Sayfa</span>
+                                </p>
+                            </div>
+
+                            {/* Actions Group */}
+                            <div className="flex items-center gap-2 pl-2 border-l border-white/5">
                                 {/* Read Button */}
                                 <Link
-                                    to={`/ juz / ${tracker.id}?mode = monthly & juzIndex=${juzIndex}& targetPage=${targetPage}& month=${currentKey} `}
-                                    className="p-2 rounded-lg bg-[#C59E57]/10 text-[#C59E57] hover:bg-[#C59E57] hover:text-white transition-all group"
+                                    to={`/juz/${tracker.id}?mode=monthly&juzIndex=${juzIndex}&targetPage=${targetPage}&month=${currentKey}`}
+                                    className="p-3 rounded-xl bg-[#C59E57]/10 text-[#C59E57] hover:bg-[#C59E57] hover:text-white transition-all hover:shadow-lg active:scale-95"
                                     title="Sayfayı oku"
                                 >
                                     <BookOpen className="w-5 h-5" />
@@ -254,7 +256,7 @@ export default function MonthlyTracker() {
                                 {/* Checkbox / Toggle */}
                                 <button
                                     onClick={() => toggleReadStatus(juzIndex)}
-                                    className={`p - 2 rounded - lg transition - all ${isRead ? 'bg-green-500 text-white' : 'bg-white/5 text-white/20 hover:text-white'} `}
+                                    className={`p-3 rounded-xl transition-all shadow-lg active:scale-95 ${isRead ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-white/5 text-white/20 hover:text-white hover:bg-white/10'}`}
                                 >
                                     <CheckCircle2 className="w-5 h-5" />
                                 </button>

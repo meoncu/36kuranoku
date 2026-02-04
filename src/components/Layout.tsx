@@ -1,10 +1,25 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LogOut, BookOpen, User as UserIcon, ShieldCheck } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { LogOut, BookOpen, User as UserIcon, ShieldCheck, Bell } from 'lucide-react';
 
 export default function Layout() {
     const { user, logout } = useAuth();
     const isAdmin = user?.email === 'meoncu@gmail.com';
+    const [pendingCount, setPendingCount] = useState(0);
+
+    useEffect(() => {
+        if (!isAdmin) return;
+
+        const q = query(collection(db, 'users'), where('isApproved', '==', false));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setPendingCount(snapshot.size);
+        });
+
+        return () => unsubscribe();
+    }, [isAdmin]);
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
@@ -16,9 +31,19 @@ export default function Layout() {
 
                 <div className="flex items-center gap-3">
                     {isAdmin && (
-                        <Link to="/admin" className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors mr-2" title="Yönetici Paneli">
-                            <ShieldCheck className="w-5 h-5" />
-                        </Link>
+                        <>
+                            {/* Notification Bell */}
+                            <Link to="/admin?tab=users" className="relative p-2 mr-1 hover:bg-white/5 rounded-lg text-white/70 hover:text-white transition-colors">
+                                <Bell className="w-5 h-5" />
+                                {pendingCount > 0 && (
+                                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+                                )}
+                            </Link>
+
+                            <Link to="/admin" className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors mr-2" title="Yönetici Paneli">
+                                <ShieldCheck className="w-5 h-5" />
+                            </Link>
+                        </>
                     )}
                     {user?.photoURL ? (
                         <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-white/20" />
