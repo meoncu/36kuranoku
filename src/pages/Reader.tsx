@@ -4,9 +4,10 @@ import { db } from '../firebase';
 import { doc, onSnapshot, updateDoc, arrayUnion, collection, query, where, getDocs, limit, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
-import { ChevronLeft, ChevronRight, X, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, CheckCircle2, Settings, Type, Minus, Plus } from 'lucide-react';
 import { MushafPage } from '../components/MushafPage';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMushafSettings } from '../hooks/useMushafSettings';
 
 export default function Reader() {
     const { id } = useParams();
@@ -29,6 +30,10 @@ export default function Reader() {
 
     // Read Only (Guest/Preview)
     const [isReadOnly, setIsReadOnly] = useState(false);
+
+    // Font Settings
+    const { fontSize, setFontSize, fontFamily, setFontFamily } = useMushafSettings();
+    const [showSettings, setShowSettings] = useState(false);
 
     useEffect(() => {
         if (!user || !id) return;
@@ -207,7 +212,7 @@ export default function Reader() {
     return (
         <div className="fixed inset-0 z-[60] bg-background flex flex-col overflow-hidden">
             {/* Top Navigation Bar */}
-            <div className="glass-card border-b border-white/5 p-4 flex items-center justify-between z-10">
+            <div className="glass-card border-b border-white/5 p-4 flex items-center justify-between z-30 reader-header">
                 <button
                     onClick={() => {
                         if (readingMode === 'monthly') navigate(`/juz/monthly/${id}`);
@@ -225,28 +230,88 @@ export default function Reader() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {/* Font Selector */}
-                    <div className="relative group">
-                        <button className="p-2 hover:bg-white/5 rounded-xl text-white transition-colors flex items-center gap-1 border border-white/10">
-                            <span className="text-xs font-bold font-sans">A</span>
-                        </button>
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100] p-2">
-                            {[
-                                { name: 'Diyanet Abay', family: "'Diyanet Abay', serif" },
-                                { name: 'Diyanet Hamdullah', family: "'Diyanet Hamdullah', serif" },
-                                { name: 'Diyanet Latif', family: "'Diyanet Latif', serif" },
-                                { name: 'Amiri Quran', family: "'Amiri Quran', serif" }
-                            ].map((f) => (
-                                <button
-                                    key={f.name}
-                                    onClick={() => document.documentElement.style.setProperty('--mushaf-font', f.family)}
-                                    className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-primary/20 rounded-lg transition-colors text-white"
+                    {/* Settings Trigger */}
+                    <button
+                        onClick={() => setShowSettings(!showSettings)}
+                        className={`p-2 rounded-xl transition-all border ${showSettings ? 'bg-primary/20 border-primary/50 text-primary' : 'hover:bg-white/5 border-white/10 text-white'}`}
+                        aria-label="Ayarlar"
+                    >
+                        <Settings className="w-6 h-6" />
+                    </button>
+
+                    {/* Font Settings Panel */}
+                    <AnimatePresence>
+                        {showSettings && (
+                            <>
+                                {/* Backdrop */}
+                                <div
+                                    className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+                                    onClick={() => setShowSettings(false)}
+                                />
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                                    className="absolute right-4 top-full mt-4 w-72 bg-[#1a1a1a] border border-white/20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden"
                                 >
-                                    {f.name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                                    <div className="p-4 space-y-6">
+                                        {/* Font Size Control */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                    <Type className="w-3 h-3" /> Metin Boyutu
+                                                </span>
+                                                <span className="text-xs font-bold text-primary">{fontSize}px</span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    onClick={() => setFontSize(prev => Math.max(16, prev - 2))}
+                                                    className="flex-1 p-2 bg-white/5 hover:bg-white/10 rounded-lg flex justify-center text-white transition-colors"
+                                                >
+                                                    <Minus className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setFontSize(prev => Math.min(64, prev + 2))}
+                                                    className="flex-1 p-2 bg-white/5 hover:bg-white/10 rounded-lg flex justify-center text-white transition-colors"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Font Family Control */}
+                                        <div className="space-y-3">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Yazı Tipi</span>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {[
+                                                    { name: 'Diyanet Abay', family: "'Diyanet Abay', serif" },
+                                                    { name: 'Diyanet Hamdullah', family: "'Diyanet Hamdullah', serif" },
+                                                    { name: 'Diyanet Latif', family: "'Diyanet Latif', serif" },
+                                                    { name: 'Amiri Quran', family: "'Amiri Quran', serif" }
+                                                ].map((f) => (
+                                                    <button
+                                                        key={f.name}
+                                                        onClick={() => setFontFamily(f.family)}
+                                                        className={`w-full text-left px-3 py-2.5 text-xs font-medium rounded-lg transition-all ${fontFamily === f.family ? 'bg-primary text-white shadow-lg' : 'hover:bg-white/5 text-gray-400 hover:text-white border border-transparent'}`}
+                                                    >
+                                                        {f.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-white/5 p-3 flex justify-center border-t border-white/5">
+                                        <button
+                                            onClick={() => setShowSettings(false)}
+                                            className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-white transition-colors"
+                                        >
+                                            Tamam
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
 
                     <div className="w-10 flex justify-center">
                         {isPageRead && (
@@ -273,7 +338,7 @@ export default function Reader() {
             </div>
 
             {/* Sticky Interaction Area */}
-            <div className="glass-card border-t border-white/5 p-4 sm:p-6 flex items-center justify-between gap-4 safe-bottom">
+            <div className="glass-card border-t border-white/5 p-4 sm:p-6 flex items-center justify-between gap-4 safe-bottom reader-footer">
                 <button
                     onClick={handlePrev}
                     disabled={readingMode === 'monthly' ? currentJuzIndex === 1 : currentPage === 1}

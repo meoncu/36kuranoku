@@ -10,9 +10,11 @@ import MonthlyTracker from './pages/MonthlyTracker';
 import AdminDashboard from './pages/AdminDashboard';
 import PendingApproval from './pages/PendingApproval';
 import Layout from './components/Layout';
+import { useMushafSettings } from './hooks/useMushafSettings';
 
 function App() {
     const { user, profile, loading } = useAuth(); // profile comes from useAuth
+    useMushafSettings(); // Initialize global settings
 
     if (loading) {
         return (

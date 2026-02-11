@@ -7,6 +7,7 @@
 @layer base {
   :root {
     --mushaf-font: 'Diyanet Hamdullah', 'Scheherazade New', serif;
+    --mushaf-size: 32px;
   }
 
   body {
@@ -131,15 +132,39 @@
 /* Mushaf specific justification */
 .mushaf-line {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   width: 100%;
-  margin-bottom: 1.5rem;
-  padding: 0 1rem;
-  line-height: 2.8;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  line-height: normal;
   font-feature-settings: "kern" 1, "calt" 1;
 }
 
 /* Surah header styling */
 .surah-header {
   @apply flex flex-col items-center justify-center py-6 my-4 border-2 border-primary/20 rounded-xl bg-primary/5 font-bold;
+}
+
+/* Landscape Mode Optimizations */
+@media (orientation: landscape) and (max-height: 600px) {
+  .reader-header {
+    @apply p-2 !important;
+  }
+
+  .reader-footer {
+    @apply p-2 !important;
+  }
+
+  .reader-footer button {
+    @apply py-2 !important;
+  }
+
+  .mushaf-paper {
+    @apply pt-2 pb-4 !important;
+  }
+
+  .mushaf-line {
+    @apply mb-2 !important;
+  }
 }

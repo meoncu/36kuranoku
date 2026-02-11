@@ -644,7 +644,7 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                                     </div>
                                 )}
                                 <div
-                                    className={`mushaf-line w-full px-4 sm:px-8 transition-all duration-300 hover:bg-primary/5 rounded min-h-[3.5rem] sm:min-h-[4.5rem] text-[#1a1a1a] dark:text-[#f3f3f3] ${words.length <= 4 ? 'justify-center gap-x-8 sm:gap-x-12' : 'justify-between'}`}
+                                    className={`mushaf-line w-full px-4 sm:px-8 transition-all duration-300 hover:bg-primary/5 rounded text-[#1a1a1a] dark:text-[#f3f3f3] flex flex-wrap gap-y-4 ${words.length <= 4 ? 'justify-center gap-x-8 sm:gap-x-12' : 'justify-center sm:justify-between'}`}
                                     style={{ direction: 'rtl' }}
                                 >
                                     {words.map((word) => {
@@ -670,7 +670,8 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                                                 onMouseLeave={handleLongPressEnd}
                                                 onTouchStart={(e) => handleLongPressStart(e, word)}
                                                 onTouchEnd={handleLongPressEnd}
-                                                className={`inline-block relative ${isEnd ? 'mx-2' : 'mx-[1px]'} text-xl sm:text-2xl md:text-3xl lg:text-[36px] py-1 cursor-pointer transition-colors select-none group/word ${textClass}`}
+                                                className={`inline-block relative ${isEnd ? 'mx-2' : 'mx-[1px]'} py-1 cursor-pointer transition-colors select-none group/word ${textClass}`}
+                                                style={{ fontSize: 'var(--mushaf-size)' }}
                                             >
                                                 {isEnd ? (
                                                     <div className="rosette-container group-hover/word:scale-110 transition-transform">
