@@ -9,12 +9,21 @@ import { CHAPTERS } from '../constants/chapters';
 interface AddJuzModalProps {
     onClose: () => void;
     initialGroupName?: string;
+    existingJuzs?: number[];
 }
 
-export default function AddJuzModal({ onClose, initialGroupName = '' }: AddJuzModalProps) {
+export default function AddJuzModal({ onClose, initialGroupName = '', existingJuzs = [] }: AddJuzModalProps) {
     const { user } = useAuth();
     const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page' | 'custom'>('juz');
-    const [selectedJuzs, setSelectedJuzs] = useState<number[]>([1]);
+    const [selectedJuzs, setSelectedJuzs] = useState<number[]>(() => {
+        if (existingJuzs.length > 0) {
+            // Find the first missing juz and suggest it
+            for (let i = 1; i <= 30; i++) {
+                if (!existingJuzs.includes(i)) return [i];
+            }
+        }
+        return [1];
+    });
     const [selectedSurahId, setSelectedSurahId] = useState(0);
     const [startPageCustom, setStartPageCustom] = useState(1);
     const [endPageCustom, setEndPageCustom] = useState(20);
@@ -273,16 +282,26 @@ export default function AddJuzModal({ onClose, initialGroupName = '' }: AddJuzMo
                                 </div>
                             </div>
                             <div className="grid grid-cols-6 gap-2 bg-white/5 p-2 rounded-xl">
-                                {Array.from({ length: 30 }, (_, i) => i + 1).map(jNo => (
-                                    <button
-                                        key={jNo}
-                                        type="button"
-                                        onClick={() => toggleJuzSelection(jNo)}
-                                        className={`aspect-square rounded-lg flex items-center justify-center text-sm font-bold transition-all ${selectedJuzs.includes(jNo) ? 'bg-[#C59E57] text-white shadow-lg scale-105' : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'}`}
-                                    >
-                                        {jNo}
-                                    </button>
-                                ))}
+                                {Array.from({ length: 30 }, (_, i) => i + 1).map(jNo => {
+                                    const isExisting = existingJuzs.includes(jNo);
+                                    const isSelected = selectedJuzs.includes(jNo);
+
+                                    return (
+                                        <button
+                                            key={jNo}
+                                            type="button"
+                                            onClick={() => toggleJuzSelection(jNo)}
+                                            className={`aspect-square rounded-lg flex flex-col items-center justify-center text-sm font-bold transition-all relative
+                                                ${isSelected ? 'bg-[#C59E57] text-white shadow-lg scale-105 z-10' :
+                                                    isExisting ? 'bg-green-500/10 text-green-500/50' : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'}`}
+                                        >
+                                            {jNo}
+                                            {isExisting && !isSelected && (
+                                                <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

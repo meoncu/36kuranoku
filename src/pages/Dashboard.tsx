@@ -116,6 +116,7 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
     const readPages = juzs.reduce((acc, j) => acc + (j.okunanSayfalar?.length || 0), 0);
     const progress = totalPages > 0 ? Math.round((readPages / totalPages) * 100) : 0;
     const sortedJuzs = [...juzs].sort((a, b) => (a.juzNo || 0) - (b.juzNo || 0));
+    const existingJuzNos = juzs.map(j => j.juzNo).filter(n => n !== undefined && n > 0) as number[];
 
     return (
         <div className="space-y-2">
@@ -128,9 +129,18 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="text-right hidden sm:block">
-                        <span className="text-xs text-white/30 font-mono block">{readPages} / {totalPages} Sayfa</span>
-                        <div className="w-24 h-1.5 bg-black/20 rounded-full mt-1 overflow-hidden"><div className="h-full bg-[#C59E57]" style={{ width: `${progress}%` }} /></div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }}
+                            className="flex items-center gap-2 bg-[#C59E57] text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-[#b08d4b] transition-all shadow-lg shadow-[#C59E57]/20 active:scale-95 z-20"
+                        >
+                            <Plus className="w-4 h-4" />
+                            <span className="hidden min-[380px]:inline">Ekle</span>
+                        </button>
+                        <div className="text-right hidden sm:block">
+                            <span className="text-xs text-white/30 font-mono block">{readPages} / {totalPages} Sayfa</span>
+                            <div className="w-24 h-1.5 bg-black/20 rounded-full mt-1 overflow-hidden"><div className="h-full bg-[#C59E57]" style={{ width: `${progress}%` }} /></div>
+                        </div>
                     </div>
                     <div className="flex items-center gap-1">
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }} className="w-8 h-8 rounded-full bg-[#C59E57]/10 flex items-center justify-center text-[#C59E57]/50 hover:bg-[#C59E57] hover:text-white transition-all backdrop-blur-sm z-20"><Plus className="w-4 h-4" /></button>
@@ -140,7 +150,7 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
                     </div>
                 </div>
                 {isEditing && <EditGroupModal groupName={title} juzs={juzs} onClose={() => setIsEditing(false)} />}
-                <AnimatePresence>{showAddInGroup && <AddJuzModal initialGroupName={title} onClose={() => setShowAddInGroup(false)} />}</AnimatePresence>
+                <AnimatePresence>{showAddInGroup && <AddJuzModal initialGroupName={title} existingJuzs={existingJuzNos} onClose={() => setShowAddInGroup(false)} />}</AnimatePresence>
             </motion.div>
             <AnimatePresence>
                 {isExpanded && (
