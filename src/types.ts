@@ -11,7 +11,7 @@ export interface Juz {
     assignedBy?: string; // Who assigned this task (e.g. "Ahmet", "Hat m Grubu")
     notes?: string; // User notes
     title?: string; // Custom title for the tracker (e.g. "Ramazan Hatmi")
-    type?: 'juz' | 'surah' | 'monthly_page'; // Tracker type
+    type?: 'juz' | 'surah' | 'monthly_page' | 'custom'; // Tracker type
     surahId?: number; // If type is surah
     startPage?: number; // Starting page of the range
     endPage?: number; // Ending page of the range

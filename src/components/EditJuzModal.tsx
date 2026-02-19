@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { db } from '../firebase';
 import { doc, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
@@ -15,14 +16,17 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
     const { user } = useAuth();
 
     // Initialize selection state based on existing juz data
-    const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page'>(juz.type || (juz.surahId ? 'surah' : 'juz'));
+    const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page' | 'custom'>(juz.type || (juz.surahId ? 'surah' : 'juz'));
     const [juzNo, setJuzNo] = useState(juz.juzNo || 1);
     const [selectedSurahId, setSelectedSurahId] = useState(juz.surahId || 0);
+    const [startPageCustom, setStartPageCustom] = useState(juz.startPage || 1);
+    const [endPageCustom, setEndPageCustom] = useState(juz.endPage || 20);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Specific for Monthly Page
     const [assignedPage, setAssignedPage] = useState(juz.assignedPage || 1);
     const [startMonth, setStartMonth] = useState(juz.startMonth || '');
+    const [groupName, setGroupName] = useState(juz.groupName || '');
 
     const [title, setTitle] = useState(juz.title || '');
     const [assignedBy, setAssignedBy] = useState(juz.assignedBy || '');
@@ -82,6 +86,11 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                 startPage = 0;
                 endPage = 0;
                 if (!title) finalTitle = `Aylık Cüz Takibi (${assignedPage}. Sayfa)`;
+            } else if (selectionType === 'custom') {
+                startPage = startPageCustom;
+                endPage = endPageCustom;
+                totalPages = (endPage - startPage) + 1;
+                if (!title) finalTitle = `${startPage}-${endPage}. Sayfalar`;
             } else {
                 if (juzNo === 1) startPage = 1;
                 if (!title || title.includes('Cüz') || title.includes('Suresi')) {
@@ -107,6 +116,8 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                 endPage: endPage,
                 assignedBy,
                 notes,
+                groupName: groupName.trim() || null,
+                isGrouped: !!groupName.trim(),
                 hedefBitisTarihi: new Date(targetDate),
                 updatedAt: serverTimestamp()
             };
@@ -126,35 +137,21 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[100] grid place-items-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className="glass-card w-full max-w-sm p-6 rounded-3xl relative animate-in fade-in zoom-in duration-200 flow-root max-h-[90vh] overflow-y-auto custom-scrollbar">
+    return createPortal(
+        <div className="fixed inset-0 z-[999] grid place-items-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+            <div className="bg-[#1c1c1c] border border-white/10 w-full max-w-sm p-6 rounded-3xl relative animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
                 <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
                     <X className="w-6 h-6" />
                 </button>
 
                 <h2 className="text-xl font-bold text-white mb-6">Takibi Düzenle</h2>
 
-                <div className="flex bg-white/5 p-1 rounded-xl mb-6">
-                    <button
-                        onClick={() => setSelectionType('juz')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${selectionType === 'juz' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
-                    >
-                        Cüz
-                    </button>
-                    <button
-                        onClick={() => setSelectionType('surah')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${selectionType === 'surah' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
-                    >
-                        Sure
-                    </button>
-                    <button
-                        onClick={() => setSelectionType('monthly_page')}
-                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${selectionType === 'monthly_page' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
-                    >
-                        Aylık
-                    </button>
+                <div className="flex bg-white/5 p-1 rounded-xl mb-6 overflow-x-auto no-scrollbar">
+                    <button onClick={() => setSelectionType('juz')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'juz' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Cüz</button>
+                    <button onClick={() => setSelectionType('surah')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'surah' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Sure</button>
+                    <button onClick={() => setSelectionType('custom')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'custom' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Özel</button>
+                    <button onClick={() => setSelectionType('monthly_page')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'monthly_page' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Aylık</button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -212,6 +209,34 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                         </div>
                     )}
 
+                    {selectionType === 'custom' && (
+                        <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl">
+                            <div>
+                                <label className="text-xs text-white/50 mb-1 block">Başlangıç Sayfa</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="604"
+                                    value={startPageCustom}
+                                    onChange={(e) => setStartPageCustom(Number(e.target.value))}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-secondary transition-colors"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-white/50 mb-1 block">Bitiş Sayfa</label>
+                                <input
+                                    type="number"
+                                    min={startPageCustom}
+                                    max="604"
+                                    value={endPageCustom}
+                                    onChange={(e) => setEndPageCustom(Number(e.target.value))}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-secondary transition-colors"
+                                />
+                            </div>
+                            <p className="col-span-2 text-[10px] text-white/30 text-center">Toplam {Math.max(0, endPageCustom - startPageCustom + 1)} sayfalık bir plan oluşturuyorsunuz.</p>
+                        </div>
+                    )}
+
                     {selectionType === 'monthly_page' && (
                         <div className="space-y-4">
                             <div>
@@ -237,15 +262,27 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                         </div>
                     )}
 
-                    <div>
-                        <label className="text-sm text-white/50 mb-1 block">Takip İsmi</label>
-                        <input
-                            type="text"
-                            placeholder="Örn: Ramazan Mukabelesi"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
-                        />
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-xs text-white/50 mb-1 block">Takip İsmi</label>
+                            <input
+                                type="text"
+                                placeholder="Örn: Ramazan Mukabelesi"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-secondary"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-white/50 mb-1 block">Grup/Klasör Adı</label>
+                            <input
+                                type="text"
+                                placeholder="Örn: Hatm-i Şerif"
+                                value={groupName}
+                                onChange={(e) => setGroupName(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-secondary"
+                            />
+                        </div>
                     </div>
 
                     <div>
@@ -299,6 +336,7 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
