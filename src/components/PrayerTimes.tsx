@@ -45,8 +45,8 @@ export default function PrayerTimes({ city }: PrayerTimesProps) {
     }, []);
 
     if (loading) return (
-        <div className="glass-card p-6 rounded-3xl flex items-center justify-center h-[120px] animate-pulse">
-            <p className="text-white/20 font-bold text-sm tracking-widest uppercase">Vakitler Yükleniyor...</p>
+        <div className="glass-card p-6 rounded-3xl flex items-center justify-center h-[120px] animate-pulse border-[var(--border)]">
+            <p className="text-foreground/20 font-bold text-sm tracking-widest uppercase font-sans">Vakitler Yükleniyor...</p>
         </div>
     );
 
@@ -72,26 +72,26 @@ export default function PrayerTimes({ city }: PrayerTimesProps) {
         <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-6 rounded-[32px] overflow-hidden relative group"
+            className="glass-card p-6 rounded-[32px] overflow-hidden relative group border-[var(--border)]"
         >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
             <div className="flex items-center justify-between mb-6 relative z-10">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                    <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
                         <Clock className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-white font-bold text-sm">{city} Namaz Vakitleri</h3>
-                        <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">
+                        <h3 className="text-foreground font-bold text-sm font-sans">{city} Namaz Vakitleri</h3>
+                        <p className="text-foreground/40 text-[10px] uppercase tracking-widest font-bold font-sans">
                             {currentTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                     </div>
                 </div>
                 {nextPrayer && (
                     <div className="text-right">
-                        <span className="text-white/30 text-[10px] font-bold uppercase block">Sıradaki Vakit</span>
-                        <span className="text-primary font-black text-sm">{nextPrayer.name} • {nextPrayer.time}</span>
+                        <span className="text-foreground/30 text-[10px] font-bold uppercase block font-sans">Sıradaki Vakit</span>
+                        <span className="text-secondary font-black text-sm font-sans">{nextPrayer.name} • {nextPrayer.time}</span>
                     </div>
                 )}
             </div>
@@ -102,12 +102,12 @@ export default function PrayerTimes({ city }: PrayerTimesProps) {
                     return (
                         <div
                             key={t.name}
-                            className={`flex flex-col items-center gap-2 p-2 rounded-2xl transition-all ${isNext ? 'bg-primary/20 scale-105 border border-primary/20' : 'bg-white/5 hover:bg-white/10'}`}
+                            className={`flex flex-col items-center gap-2 p-2 rounded-2xl transition-all border ${isNext ? 'bg-secondary/10 scale-105 border-secondary/20 shadow-lg shadow-secondary/10' : 'bg-foreground/5 border-transparent hover:bg-foreground/10'}`}
                         >
-                            <t.icon className={`w-4 h-4 ${isNext ? 'text-primary' : 'text-white/40'}`} />
-                            <div className="text-center">
-                                <span className={`text-[9px] font-bold block ${isNext ? 'text-primary' : 'text-white/30'}`}>{t.name}</span>
-                                <span className={`text-[11px] font-black block ${isNext ? 'text-white' : 'text-white/60'}`}>{t.time}</span>
+                            <t.icon className={`w-4 h-4 ${isNext ? 'text-secondary' : 'text-foreground/40'}`} />
+                            <div className="text-center font-sans">
+                                <span className={`text-[9px] font-bold block ${isNext ? 'text-secondary' : 'text-foreground/30'}`}>{t.name}</span>
+                                <span className={`text-[11px] font-black block ${isNext ? 'text-foreground' : 'text-foreground/60'}`}>{t.time}</span>
                             </div>
                         </div>
                     );

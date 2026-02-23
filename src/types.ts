@@ -37,4 +37,5 @@ export interface UserProfile {
     showPrayerTimes?: boolean;
     showResumeReading?: boolean;
     showInstallBanner?: boolean;
+    theme?: 'light' | 'dark';
 }

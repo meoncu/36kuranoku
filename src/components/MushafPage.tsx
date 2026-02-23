@@ -391,15 +391,14 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                             initial={{ opacity: 0, scale: 0.9, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                            className="bg-[#1a1a1a] border border-[#C59E57]/30 rounded-2xl shadow-2xl p-2 flex items-center gap-2 backdrop-blur-xl"
+                            className="bg-card glass-card border-[var(--border)] rounded-2xl shadow-2xl p-2 flex items-center gap-2 backdrop-blur-xl"
                         >
-                            <button onClick={handleCopy} className="p-3 hover:bg-white/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
-                                <Copy className="w-5 h-5 text-white/70 group-hover:text-white" />
-                                <span className="text-[10px] font-bold text-white/50 group-hover:text-white">Kopyala</span>
+                            <button onClick={handleCopy} className="p-3 hover:bg-foreground/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
+                                <Copy className="w-5 h-5 text-foreground/70 group-hover:text-foreground" />
+                                <span className="text-[10px] font-bold text-foreground/50 group-hover:text-foreground">Kopyala</span>
                             </button>
-                            <div className="w-[1px] h-8 bg-white/10" />
-                            <div className="w-[1px] h-8 bg-white/10" />
-                            <button onClick={toggleBookmark} className="p-3 hover:bg-white/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
+                            <div className="w-[1px] h-8 bg-[var(--border)]" />
+                            <button onClick={toggleBookmark} className="p-3 hover:bg-foreground/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
                                 {activeMenu.data.verse_key && bookmarkedVerses.has(activeMenu.data.verse_key) ? (
                                     <>
                                         <Trash2 className="w-5 h-5 text-red-500/70 group-hover:text-red-500" />
@@ -407,29 +406,29 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                                     </>
                                 ) : (
                                     <>
-                                        <Bookmark className="w-5 h-5 text-white/70 group-hover:text-[#C59E57]" />
-                                        <span className="text-[10px] font-bold text-white/50 group-hover:text-[#C59E57]">Kaydet</span>
+                                        <Bookmark className="w-5 h-5 text-foreground/70 group-hover:text-secondary" />
+                                        <span className="text-[10px] font-bold text-foreground/50 group-hover:text-secondary">Kaydet</span>
                                     </>
                                 )}
                             </button>
-                            <div className="w-[1px] h-8 bg-white/10" />
-                            <button onClick={handleTranslation} className="p-3 hover:bg-white/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
-                                <BookOpen className="w-5 h-5 text-white/70 group-hover:text-white" />
-                                <span className="text-[10px] font-bold text-white/50 group-hover:text-white">Meâl</span>
+                            <div className="w-[1px] h-8 bg-[var(--border)]" />
+                            <button onClick={handleTranslation} className="p-3 hover:bg-foreground/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
+                                <BookOpen className="w-5 h-5 text-foreground/70 group-hover:text-foreground" />
+                                <span className="text-[10px] font-bold text-foreground/50 group-hover:text-foreground">Meâl</span>
                             </button>
-                            <div className="w-[1px] h-8 bg-white/10" />
-                            <button onClick={handleShare} className="p-3 hover:bg-white/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
-                                <Share2 className="w-5 h-5 text-white/70 group-hover:text-white" />
-                                <span className="text-[10px] font-bold text-white/50 group-hover:text-white">Paylaş</span>
+                            <div className="w-[1px] h-8 bg-[var(--border)]" />
+                            <button onClick={handleShare} className="p-3 hover:bg-foreground/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
+                                <Share2 className="w-5 h-5 text-foreground/70 group-hover:text-foreground" />
+                                <span className="text-[10px] font-bold text-foreground/50 group-hover:text-foreground">Paylaş</span>
                             </button>
-                            <div className="w-[1px] h-8 bg-white/10" />
-                            <button onClick={() => handlePlayAudio()} className="p-3 hover:bg-white/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
-                                <Volume2 className={`w-5 h-5 ${isPlaying ? 'text-[#C59E57] animate-pulse' : 'text-white/70'} group-hover:text-white`} />
-                                <span className={`text-[10px] font-bold ${isPlaying ? 'text-[#C59E57]' : 'text-white/50'} group-hover:text-white`}>Dinle</span>
+                            <div className="w-[1px] h-8 bg-[var(--border)]" />
+                            <button onClick={() => handlePlayAudio()} className="p-3 hover:bg-foreground/10 rounded-xl flex flex-col items-center gap-1 min-w-[60px] group transition-colors">
+                                <Volume2 className={`w-5 h-5 ${isPlaying ? 'text-secondary animate-pulse' : 'text-foreground/70'} group-hover:text-foreground`} />
+                                <span className={`text-[10px] font-bold ${isPlaying ? 'text-secondary' : 'text-foreground/50'} group-hover:text-foreground`}>Dinle</span>
                             </button>
                         </motion.div>
                         {/* Triangle Arrow */}
-                        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] w-3 h-3 bg-[#1a1a1a] border-b border-r border-[#C59E57]/30 rotate-45"></div>
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] w-3 h-3 bg-card border-b border-r border-[var(--border)] rotate-45"></div>
                     </div>
                 )}
             </AnimatePresence>
@@ -437,20 +436,20 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
             {/* Translation Modal - Showing in-page context */}
             <AnimatePresence>
                 {showTranslationModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4 backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 100 }}
-                            className="bg-[#fafafa] dark:bg-[#1a1a1a] w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl border-t border-white/10"
+                            className="bg-background w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl border-t border-[var(--border)]"
                         >
                             {/* Header */}
-                            <div className="bg-[#C59E57] px-6 py-4 flex items-center justify-between">
+                            <div className="bg-secondary px-6 py-4 flex items-center justify-between">
                                 <h3 className="text-white font-bold flex items-center gap-2">
                                     <BookOpen className="w-5 h-5" />
                                     Ayet Meâli
                                 </h3>
-                                <button onClick={() => setShowTranslationModal(false)} className="w-8 h-8 rounded-full bg-black/10 grid place-items-center text-white/70 hover:bg-black/20 hover:text-white transition-colors">
+                                <button onClick={() => setShowTranslationModal(false)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center transition-colors">
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
@@ -458,22 +457,22 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                             <div className="p-6 max-h-[60vh] overflow-y-auto">
                                 {translating ? (
                                     <div className="flex flex-col items-center py-8 gap-4">
-                                        <Loader2 className="w-8 h-8 animate-spin text-[#C59E57]" />
-                                        <p className="text-muted-foreground text-sm">Meâl yükleniyor...</p>
+                                        <Loader2 className="w-8 h-8 animate-spin text-secondary" />
+                                        <p className="text-foreground/50 text-sm">Meâl yükleniyor...</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-6">
                                         {/* Toggle View */}
-                                        <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl">
+                                        <div className="flex bg-foreground/5 p-1 rounded-xl">
                                             <button
                                                 onClick={() => setViewMode('translation')}
-                                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === 'translation' ? 'bg-white dark:bg-white/10 text-[#C59E57] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === 'translation' ? 'bg-background text-secondary shadow-sm' : 'text-foreground/40 hover:text-foreground'}`}
                                             >
                                                 Genel Meâl
                                             </button>
                                             <button
                                                 onClick={() => setViewMode('words')}
-                                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === 'words' ? 'bg-white dark:bg-white/10 text-[#C59E57] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${viewMode === 'words' ? 'bg-background text-secondary shadow-sm' : 'text-foreground/40 hover:text-foreground'}`}
                                             >
                                                 Kelime Kelime
                                             </button>
@@ -481,16 +480,16 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
 
                                         {viewMode === 'translation' ? (
                                             <>
-                                                <div className="text-center p-4 bg-[#C59E57]/5 rounded-2xl border border-[#C59E57]/10">
-                                                    <span className="opacity-40 text-xs font-sans block mb-4 uppercase tracking-widest text-left">Ayet Metni</span>
-                                                    <p className="font-mushaf text-2xl sm:text-3xl leading-relaxed text-[#1a1a1a] dark:text-white/90 dir-rtl">
+                                                <div className="text-center p-4 bg-secondary/5 rounded-2xl border border-secondary/10">
+                                                    <span className="opacity-40 text-xs font-sans block mb-4 uppercase tracking-widest text-left text-foreground">Ayet Metni</span>
+                                                    <p className="font-mushaf text-2xl sm:text-3xl leading-relaxed text-foreground dir-rtl">
                                                         {fullVerseText || activeMenu?.data.text_uthmani}
                                                     </p>
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <span className="text-[#C59E57] font-bold text-xs uppercase tracking-widest block mb-2">Türkçe Meâl (Diyanet)</span>
-                                                    <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300 font-medium">
+                                                    <span className="text-secondary font-bold text-xs uppercase tracking-widest block mb-2">Türkçe Meâl (Diyanet)</span>
+                                                    <p className="text-lg leading-relaxed text-foreground/80 font-medium font-sans">
                                                         {translation}
                                                     </p>
                                                 </div>
@@ -499,10 +498,10 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                                             <div className="space-y-4">
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 dir-rtl">
                                                     {verseWords.filter(w => w.char_type_name !== 'end').map((word, idx) => (
-                                                        <div key={idx} className="bg-white dark:bg-white/5 p-3 rounded-xl border border-dashed border-gray-200 dark:border-white/10 flex flex-col items-center gap-2 text-center">
-                                                            <p className="font-mushaf text-2xl text-[#1a1a1a] dark:text-white/90">{word.text_uthmani}</p>
-                                                            <div className="w-full h-px bg-gray-100 dark:bg-white/5" />
-                                                            <p className="text-sm font-medium text-[#C59E57] dir-ltr">
+                                                        <div key={idx} className="bg-foreground/5 p-3 rounded-xl border border-dashed border-[var(--border)] flex flex-col items-center gap-2 text-center">
+                                                            <p className="font-mushaf text-2xl text-foreground">{word.text_uthmani}</p>
+                                                            <div className="w-full h-px bg-foreground/10" />
+                                                            <p className="text-sm font-medium text-secondary dir-ltr">
                                                                 {word.translation?.text || '-'}
                                                             </p>
                                                         </div>
@@ -526,18 +525,18 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                         exit={{ opacity: 0, y: 100 }}
                         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md"
                     >
-                        <div className="bg-[#1a1a1a]/95 backdrop-blur-xl border border-[#C59E57]/20 rounded-2xl p-4 shadow-2xl flex items-center gap-4 relative overflow-hidden">
+                        <div className="bg-card glass-card border-[var(--border)] rounded-2xl p-4 shadow-2xl flex items-center gap-4 relative overflow-hidden">
                             {/* Progress Bar Background */}
-                            <div className="absolute bottom-0 left-0 w-full h-1 bg-white/5">
+                            <div className="absolute bottom-0 left-0 w-full h-1 bg-foreground/5">
                                 <div
-                                    className="h-full bg-[#C59E57] transition-all duration-300 ease-linear"
+                                    className="h-full bg-secondary transition-all duration-300 ease-linear"
                                     style={{ width: `${audioProgress}%` }}
                                 />
                             </div>
 
                             <button
                                 onClick={togglePlayPause}
-                                className="w-12 h-12 rounded-full bg-[#C59E57] grid place-items-center text-white shrink-0 shadow-lg shadow-[#C59E57]/20 hover:bg-[#b08d4b] transition-colors"
+                                className="w-12 h-12 rounded-full bg-secondary grid place-items-center text-white shrink-0 shadow-lg shadow-secondary/20 hover:opacity-90 transition-colors"
                             >
                                 {isBuffering ? (
                                     <Loader2 className="w-6 h-6 animate-spin" />
@@ -550,21 +549,21 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
 
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[#C59E57] text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#C59E57]/10">
+                                    <span className="text-secondary text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-secondary/10">
                                         Mishary Rashid
                                     </span>
                                 </div>
-                                <h4 className="text-white font-bold text-sm truncate">
+                                <h4 className="text-foreground font-bold text-sm truncate">
                                     {activeAudio.verseKey}
                                 </h4>
-                                <p className="text-white/40 text-xs truncate">
+                                <p className="text-foreground/40 text-xs truncate">
                                     Diyanet Vakfı
                                 </p>
                             </div>
 
                             <button
                                 onClick={stopAudio}
-                                className="w-10 h-10 rounded-xl bg-white/5 grid place-items-center text-white/50 hover:bg-red-500/10 hover:text-red-500 transition-colors shrink-0"
+                                className="w-10 h-10 rounded-xl bg-foreground/5 grid place-items-center text-foreground/50 hover:bg-red-500/10 hover:text-red-500 transition-colors shrink-0"
                             >
                                 <Square className="w-4 h-4 fill-current" />
                             </button>
@@ -581,10 +580,10 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
             {/* Actual Header inside content flow for better print/view layout */}
             <div className="w-full flex items-center justify-between py-2 mb-2 font-sans relative">
                 {/* Decorative Background Line */}
-                <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#C59E57]/30 to-transparent top-1/2 -translate-y-1/2"></div>
+                <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-secondary/30 to-transparent top-1/2 -translate-y-1/2"></div>
 
                 {/* Left Side: Page Number */}
-                <div className="relative z-10 bg-[#C59E57] text-[#f4ebd0] px-6 py-1.5 rounded-r-full text-xs font-bold tracking-widest shadow-lg shadow-[#C59E57]/20 uppercase">
+                <div className="relative z-10 bg-secondary text-white px-6 py-1.5 rounded-r-full text-xs font-bold tracking-widest shadow-lg shadow-secondary/20 uppercase">
                     Sayfa {pageNumber}
                 </div>
 
@@ -593,14 +592,14 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                     <div className="relative z-10">
                         <div className="flex flex-col items-center justify-center">
                             {/* Decorative Container Shape */}
-                            <div className="bg-[#C59E57] px-8 py-2 relative rounded-xl shadow-lg shadow-[#C59E57]/20">
+                            <div className="bg-secondary px-8 py-2 relative rounded-xl shadow-lg shadow-secondary/20">
                                 {/* Side Decorations */}
-                                <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#C59E57] rotate-45 border-l border-b border-[#f4ebd0]/30"></div>
-                                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#C59E57] rotate-45 border-r border-t border-[#f4ebd0]/30"></div>
+                                <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-secondary rotate-45 border-l border-b border-white/30"></div>
+                                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-secondary rotate-45 border-r border-t border-white/30"></div>
 
                                 <div className="text-center relative z-10">
-                                    <span className="block font-mushaf text-xl text-[#f4ebd0] leading-none mb-0.5">{activeSurah.arabic}</span>
-                                    <span className="block text-[9px] font-bold text-[#f4ebd0]/90 tracking-[0.2em] uppercase whitespace-nowrap">
+                                    <span className="block font-mushaf text-xl text-white leading-none mb-0.5">{activeSurah.arabic}</span>
+                                    <span className="block text-[9px] font-bold text-white/90 tracking-[0.2em] uppercase whitespace-nowrap">
                                         {activeSurah.name.toUpperCase()} SURESİ
                                     </span>
                                 </div>
@@ -610,7 +609,7 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                 )}
 
                 {/* Right Side: Juz Number */}
-                <div className="relative z-10 bg-[#C59E57] text-[#f4ebd0] px-6 py-1.5 rounded-l-full text-xs font-bold tracking-widest shadow-lg shadow-[#C59E57]/20 uppercase">
+                <div className="relative z-10 bg-secondary text-white px-6 py-1.5 rounded-l-full text-xs font-bold tracking-widest shadow-lg shadow-secondary/20 uppercase">
                     {juzNumber}. Cüz
                 </div>
             </div>
@@ -629,12 +628,12 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                                 {startingSurah && (
                                     <div className="w-full mt-2 mb-4 flex flex-col items-center line-header">
                                         <div className="w-full flex items-center gap-4 my-6 opacity-70 group/header">
-                                            <div className="h-px bg-[#C59E57] flex-1 opacity-30 group-hover/header:opacity-100 transition-opacity"></div>
-                                            <div className="flex items-center gap-3 text-[#C59E57]">
+                                            <div className="h-px bg-secondary flex-1 opacity-30 group-hover/header:opacity-100 transition-opacity"></div>
+                                            <div className="flex items-center gap-3 text-secondary">
                                                 <span className="font-sans font-bold text-[10px] uppercase tracking-[0.2em]">{startingSurah.id}. {startingSurah.name}</span>
                                                 <span className="font-mushaf text-lg">{startingSurah.arabic}</span>
                                             </div>
-                                            <div className="h-px bg-[#C59E57] flex-1 opacity-30 group-hover/header:opacity-100 transition-opacity"></div>
+                                            <div className="h-px bg-secondary flex-1 opacity-30 group-hover/header:opacity-100 transition-opacity"></div>
                                         </div>
                                         {startingSurah.id !== 1 && startingSurah.id !== 9 && (
                                             <div className="text-2xl sm:text-4xl lg:text-5xl text-center mb-8 text-foreground/80 font-mushaf">
@@ -644,7 +643,7 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                                     </div>
                                 )}
                                 <div
-                                    className={`mushaf-line w-full px-4 sm:px-8 transition-all duration-300 hover:bg-primary/5 rounded text-[#1a1a1a] dark:text-[#f3f3f3] flex flex-wrap gap-y-4 ${words.length <= 4 ? 'justify-center gap-x-8 sm:gap-x-12' : 'justify-center sm:justify-between'}`}
+                                    className={`mushaf-line w-full px-4 sm:px-8 transition-all duration-300 hover:bg-secondary/5 rounded text-foreground flex flex-wrap gap-y-4 ${words.length <= 4 ? 'justify-center gap-x-8 sm:gap-x-12' : 'justify-center sm:justify-between'}`}
                                     style={{ direction: 'rtl' }}
                                 >
                                     {words.map((word) => {
@@ -658,8 +657,8 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
                                         const isBookmarked = word.verse_key && bookmarkedVerses.has(word.verse_key);
 
                                         // Determine Color Class
-                                        let textClass = 'hover:text-primary'; // Default
-                                        if (isActive) textClass = 'text-[#C59E57] scale-110 drop-shadow-md';
+                                        let textClass = 'hover:text-secondary'; // Default
+                                        if (isActive) textClass = 'text-secondary scale-110 drop-shadow-md';
                                         else if (isBookmarked) textClass = 'text-emerald-600 dark:text-emerald-500';
 
                                         return (
@@ -700,13 +699,13 @@ export const MushafPage: React.FC<MushafPageProps> = ({ pageNumber }) => {
             </div>
 
             {/* Page Footer Info */}
-            <div className="mt-12 pt-6 border-t border-primary/10 flex items-center justify-between text-[10px] sm:text-[11px] font-sans uppercase tracking-[0.2em] text-muted-foreground/50">
+            <div className="mt-12 pt-6 border-t border-[var(--border)] flex items-center justify-between text-[10px] sm:text-[11px] font-sans uppercase tracking-[0.2em] text-foreground/30">
                 <div className="flex items-center gap-4">
-                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full font-bold">SYF {pageNumber}</span>
+                    <span className="bg-secondary/10 text-secondary px-3 py-1 rounded-full font-bold">SYF {pageNumber}</span>
                     <span className="hidden sm:inline">Tecvidli Türkiye Mushafı</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
                     <span>Dynamic Render</span>
                 </div>
             </div>

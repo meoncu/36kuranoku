@@ -6,21 +6,21 @@ export default function PendingApproval() {
 
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="glass-card max-w-md w-full p-8 rounded-[40px] text-center relative overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#C59E57] to-transparent opacity-50" />
+            <div className="bg-card glass-card max-w-md w-full p-8 rounded-[40px] text-center relative overflow-hidden border border-[var(--border)]">
+                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-secondary to-transparent opacity-50" />
 
-                <div className="w-20 h-20 rounded-full bg-[#C59E57]/10 mx-auto mb-6 grid place-items-center">
-                    <div className="w-12 h-12 rounded-full bg-[#C59E57] animate-pulse" />
+                <div className="w-20 h-20 rounded-full bg-secondary/10 mx-auto mb-6 grid place-items-center">
+                    <div className="w-12 h-12 rounded-full bg-secondary animate-pulse" />
                 </div>
 
-                <h1 className="text-2xl font-bold text-white mb-2">Onay Bekleniyor</h1>
-                <p className="text-white/60 mb-8">
+                <h1 className="text-2xl font-bold text-foreground mb-2">Onay Bekleniyor</h1>
+                <p className="text-foreground/60 mb-8 font-sans">
                     Hesabınız oluşturuldu ancak yönetici onayı gerekiyor. Onaylandığında sisteme erişebileceksiniz.
                 </p>
 
                 <button
                     onClick={logout}
-                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all font-bold text-sm"
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-foreground/5 hover:bg-foreground/10 text-foreground/70 hover:text-foreground transition-all font-bold text-sm font-sans"
                 >
                     <LogOut className="w-4 h-4" />
                     Çıkış Yap

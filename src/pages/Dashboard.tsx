@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, where, getDocs, addDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, where, getDocs, addDoc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
-import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive, Trash2, Folder, FolderOpen, ChevronDown, Settings } from 'lucide-react';
+import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive, Trash2, Folder, FolderOpen, ChevronDown, Settings, LayoutGrid } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AddJuzModal from '../components/AddJuzModal';
 import EditJuzModal from '../components/EditJuzModal';
@@ -13,8 +13,75 @@ import PrayerTimes from '../components/PrayerTimes';
 import InstallPWA from '../components/InstallPWA';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CHAPTERS } from '../constants/chapters';
+import { quranService } from '../services/quranService';
 
-const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive }: { juz: Juz, isChild?: boolean, onDelete: (j: Juz) => void, onComplete: (j: Juz) => void, onEdit: (j: Juz) => void, onArchive: (j: Juz) => void }) => {
+const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive, onTogglePage }: { juz: Juz, isChild?: boolean, onDelete: (j: Juz) => void, onComplete: (j: Juz) => void, onEdit: (j: Juz) => void, onArchive: (j: Juz) => void, onTogglePage: (id: string, page: number, read: boolean) => void }) => {
+    const [showGrid, setShowGrid] = useState(false);
+    const [selectedPageInfo, setSelectedPageInfo] = useState<{
+        pageNo: number;
+        surahName: string;
+        verseNo: number;
+        snippet: string;
+        absolutePage: number;
+    } | null>(null);
+    const [loadingInfo, setLoadingInfo] = useState(false);
+
+    const handlePageClick = async (e: React.MouseEvent, pageNo: number, isRead: boolean) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Toggle read status
+        onTogglePage(juz.id, pageNo, isRead);
+
+        // Fetch info
+        setLoadingInfo(true);
+        try {
+            let absolutePage;
+            if (juz.type === 'juz') {
+                const start = juz.startPage || (juz.juzNo === 1 ? 1 : juz.juzNo === 30 ? 582 : ((juz.juzNo - 1) * 20) + 2);
+                absolutePage = start + pageNo - 1;
+            } else if (juz.type === 'surah') {
+                const surah = CHAPTERS.find(c => c.id === juz.surahId);
+                absolutePage = (surah?.startPage || 1) + pageNo - 1;
+            } else {
+                absolutePage = (juz.startPage || 1) + pageNo - 1;
+            }
+
+            const data = await quranService.getPage(absolutePage);
+            const sortedLines = Object.entries(data.lines).sort((a, b) => Number(a[0]) - Number(b[0]));
+
+            if (sortedLines.length > 0) {
+                const firstLineWords = sortedLines[0][1];
+                const firstWord = firstLineWords.find(w => w.char_type_name === 'word') || firstLineWords[0];
+                const [sId, vId] = firstWord.verse_key!.split(':').map(Number);
+                const surah = CHAPTERS.find(c => c.id === sId);
+
+                // Get first 3 words
+                const allWords = sortedLines.flatMap(l => l[1]).filter(w => w.char_type_name === 'word');
+                const snippet = allWords.slice(0, 3).map(w => w.text_uthmani).join(' ');
+
+                setSelectedPageInfo({
+                    pageNo,
+                    surahName: surah?.name || 'Bilinmiyor',
+                    verseNo: vId,
+                    snippet,
+                    absolutePage
+                });
+            }
+        } catch (err) {
+            console.error("Bilgi alınamadı:", err);
+        } finally {
+            setLoadingInfo(false);
+        }
+    };
+
+    const formatDate = (timestamp: any) => {
+        if (!timestamp) return null;
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return `${date.getDate()}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+    };
+
+
     const progress = juz.toplamSayfa > 0 ? (juz.okunanSayfalar.length / juz.toplamSayfa) * 100 : 0;
     const isCompleted = juz.okunanSayfalar.length >= juz.toplamSayfa;
 
@@ -31,25 +98,25 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
 
         return (
             <motion.div layout>
-                <Link to={`/juz/monthly/${juz.id}`} className={`glass-card p-6 rounded-[32px] block hover:bg-white/[0.08] transition-all group border-white/5 relative overflow-hidden ${isChild ? 'bg-black/20' : ''}`}>
-                    <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#C59E57]/10 to-[#C59E57]/30 transition-all duration-1000 border-r border-[#C59E57]/20" style={{ width: `${progressPercent}%` }} />
-                    <div className="absolute right-40 sm:right-44 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
-                        <span className="text-5xl font-black text-white/10 tracking-tighter">%{Math.round(progressPercent)}</span>
+                <Link to={`/juz/monthly/${juz.id}`} className={`glass-card p-6 rounded-[32px] block hover:bg-foreground/[0.08] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
+                    <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-secondary/10 to-secondary/30 transition-all duration-1000 border-r border-secondary/20" style={{ width: `${progressPercent}%` }} />
+                    <div className="absolute right-28 sm:right-44 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
+                        <span className="text-[32px] sm:text-5xl font-black text-foreground/10 tracking-tight">%{Math.round(progressPercent)}</span>
                     </div>
                     <div className="relative z-10 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-[#C59E57]/20 flex items-center justify-center text-[#C59E57]"><Calendar className="w-6 h-6" /></div>
+                            <div className="w-12 h-12 rounded-2xl bg-secondary/20 flex items-center justify-center text-secondary"><Calendar className="w-6 h-6" /></div>
                             <div>
-                                <h3 className="text-white font-bold text-lg">{juz.title}</h3>
+                                <h3 className="text-foreground font-bold text-lg">{juz.title}</h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-white/60 text-xs font-medium">{now.toLocaleString('tr-TR', { month: 'long' })} Hedefi:</span>
-                                    <span className="bg-white/10 px-2 py-0.5 rounded text-white text-xs font-bold">{targetPage}. Sayfalar</span>
+                                    <span className="text-foreground/60 text-xs font-medium">{now.toLocaleString('tr-TR', { month: 'long' })} Hedefi:</span>
+                                    <span className="bg-foreground/5 px-2 py-0.5 rounded text-foreground text-xs font-bold font-sans">{targetPage}. Sayfalar</span>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 pl-2">
                             <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(juz); }} className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"><Trash2 className="w-4 h-4" /></button>
-                            <div className="w-10 h-10 rounded-full bg-white/5 grid place-items-center group-hover:bg-[#C59E57] group-hover:text-white transition-all"><ChevronRight className="w-5 h-5" /></div>
+                            <div className="w-10 h-10 rounded-full bg-foreground/5 grid place-items-center group-hover:bg-secondary group-hover:text-white transition-all"><ChevronRight className="w-5 h-5" /></div>
                         </div>
                     </div>
                 </Link>
@@ -59,21 +126,27 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
 
     return (
         <motion.div layout>
-            <Link to={`/juz/${juz.id}`} className={`glass-card p-6 rounded-[32px] block hover:bg-white/[0.08] transition-all group border-white/5 relative overflow-hidden ${isChild ? 'bg-black/20' : ''}`}>
-                <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#C59E57]/10 to-[#C59E57]/30 transition-all duration-1000 border-r border-[#C59E57]/20" style={{ width: `${progress}%` }} />
-                <div className="absolute right-40 sm:right-44 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
-                    <span className="text-5xl font-black text-white/10 tracking-tighter">%{Math.round(progress)}</span>
+            <Link to={`/juz/${juz.id}`} className={`glass-card p-6 rounded-[32px] block hover:bg-foreground/[0.02] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
+                <div
+                    className={`absolute inset-y-0 left-0 bg-gradient-to-r transition-all duration-1000 border-r ${progress >= 100
+                        ? 'from-green-500/10 to-green-500/25 dark:from-green-500/20 dark:to-green-500/40 border-green-500/20'
+                        : 'from-secondary/[0.1] to-secondary/[0.25] dark:from-secondary/10 dark:to-secondary/40 border-secondary/30'
+                        }`}
+                    style={{ width: `${progress}%` }}
+                />
+                <div className="absolute right-32 sm:right-48 top-1/2 -translate-y-1/2 z-0 pointer-events-none blur-[1.5px] opacity-60">
+                    <span className="text-3xl sm:text-4xl font-black text-foreground/20 dark:text-foreground/10 tracking-tighter">%{Math.round(progress)}</span>
                 </div>
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-2xl bg-white/5 grid place-items-center relative group/circle ${isChild ? 'scale-90' : ''}`}>
-                            <span className="font-bold text-xl text-white group-hover/circle:opacity-0 transition-opacity">
+                        <div className={`w-14 h-14 rounded-2xl bg-foreground/5 grid place-items-center relative group/circle ${isChild ? 'scale-90' : ''}`}>
+                            <span className="font-bold text-xl text-foreground group-hover/circle:opacity-0 transition-opacity">
                                 {juz.type === 'surah' ? <BookOpen className="w-6 h-6" /> : juz.type === 'custom' ? <TrendingUp className="w-6 h-6" /> : juz.juzNo}
                             </span>
                             {juz.type !== 'surah' && (
                                 <svg className="absolute inset-0 w-full h-full -rotate-90 group-hover/circle:opacity-0 transition-opacity">
-                                    <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" strokeWidth="2" className="text-white/5" />
-                                    <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" strokeWidth="2" strokeDasharray={150} strokeDashoffset={150 - (150 * progress) / 100} className="text-[#C59E57]" />
+                                    <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" strokeWidth="2" className="text-foreground/[0.08] dark:text-foreground/5" />
+                                    <circle cx="28" cy="28" r="24" fill="transparent" stroke="currentColor" strokeWidth="2" strokeDasharray={150} strokeDashoffset={150 - (150 * progress) / 100} className="text-secondary" />
                                 </svg>
                             )}
                             {!isCompleted && (
@@ -82,80 +155,202 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                             {isCompleted && <div className="absolute inset-0 flex items-center justify-center text-green-500"><CheckCircle2 className="w-8 h-8" /></div>}
                         </div>
                         <div className="space-y-0.5">
-                            <h3 className="font-bold text-lg text-white leading-tight">{juz.title || `${juz.juzNo}. Cüz`}</h3>
+                            <div className="flex items-center gap-3">
+                                <h3 className="font-bold text-lg text-foreground leading-tight">{juz.title || `${juz.juzNo}. Cüz`}</h3>
+                                {juz.hedefBitisTarihi && (
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-md">
+                                        <Calendar className="w-3 h-3" />
+                                        <span>{formatDate(juz.hedefBitisTarihi)}</span>
+                                    </div>
+                                )}
+                            </div>
                             {juz.type === 'custom' && (
-                                <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Sayfa {juz.startPage}-{juz.endPage}</p>
+                                <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">Sayfa {juz.startPage}-{juz.endPage}</p>
                             )}
                             <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-wider">
-                                {isCompleted ? <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Tamamlandı</span> : <span className="text-white/30 flex items-center gap-1.5"><BookOpen className="w-3 h-3" /> {juz.okunanSayfalar.length}/{juz.toplamSayfa} Sayfa</span>}
+                                {isCompleted ? <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Tamamlandı</span> : <span className="text-foreground/30 flex items-center gap-1.5"><BookOpen className="w-3 h-3" /> {juz.okunanSayfalar.length}/{juz.toplamSayfa} Sayfa</span>}
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 relative z-20">
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowGrid(!showGrid); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-sm ${showGrid ? 'bg-secondary text-white shadow-lg shadow-secondary/20 scale-110' : 'bg-foreground/5 text-foreground/40 hover:bg-foreground/10'}`}>
+                            <LayoutGrid className="w-4 h-4" />
+                        </button>
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(juz); }} className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm"><Trash2 className="w-4 h-4" /></button>
+
                         {!isCompleted && (
-                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(juz); }} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-[#C59E57] hover:text-white transition-all backdrop-blur-sm"><Edit2 className="w-4 h-4" /></button>
+                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(juz); }} className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/40 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm"><Edit2 className="w-4 h-4" /></button>
                         )}
                         {isCompleted && (
                             <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onArchive(juz); }} className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-all backdrop-blur-sm"><Archive className="w-4 h-4" /></button>
                         )}
-                        <div className="w-10 h-10 rounded-full bg-white/5 grid place-items-center group-hover:bg-[#C59E57] group-hover:text-white transition-all"><ChevronRight className="w-5 h-5" /></div>
+                        <div className="w-10 h-10 rounded-full bg-foreground/5 grid place-items-center group-hover:bg-secondary group-hover:text-white transition-all"><ChevronRight className="w-5 h-5" /></div>
                     </div>
                 </div>
             </Link>
+            <AnimatePresence>
+                {showGrid && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="px-6 pb-6 pt-2 bg-foreground/[0.03] border-t border-[var(--border)] space-y-3">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">Hızlı Okuma Takibi</span>
+                                <span className="text-[10px] font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-2 py-0.5 rounded-md">Sayfa {juz.okunanSayfalar.length}/{juz.toplamSayfa}</span>
+                            </div>
+                            <div className="grid grid-cols-5 min-[400px]:grid-cols-10 gap-2">
+                                {Array.from({ length: juz.toplamSayfa || 20 }, (_, i) => i + 1).map(page => {
+                                    const isRead = juz.okunanSayfalar.includes(page);
+                                    return (
+                                        <button
+                                            key={page}
+                                            onClick={(e) => handlePageClick(e, page, isRead)}
+                                            className={`aspect-square rounded-xl font-bold text-xs transition-all border flex items-center justify-center shadow-inner relative ${isRead ? 'bg-secondary border-secondary text-white shadow-secondary/20 active:scale-95' : 'bg-foreground/5 border-foreground/10 text-foreground/40 hover:border-foreground/20 hover:bg-foreground/10'} ${selectedPageInfo?.pageNo === page ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-background' : ''}`}
+                                        >
+                                            {loadingInfo && selectedPageInfo?.pageNo === page ? <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-xl"><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /></div> : page}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {selectedPageInfo && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="mt-4 p-4 rounded-2xl bg-red-500/5 border-2 border-red-500/20 text-red-500 relative"
+                                >
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div className="space-y-1">
+                                            <div className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Quran Sayfası</div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-3xl font-black tracking-tighter">{selectedPageInfo.absolutePage}</span>
+                                                <div className="h-6 w-px bg-red-500/20" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold leading-none mb-1">{selectedPageInfo.surahName} Suresi</span>
+                                                    <span className="text-[10px] font-medium opacity-70 uppercase tracking-widest">{selectedPageInfo.verseNo}. Ayet başı</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="sm:text-right border-t sm:border-t-0 border-red-500/10 pt-3 sm:pt-0">
+                                            <div className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-40 mb-1">Sayfa Başı</div>
+                                            <div className="text-2xl font-mushaf leading-tight" dir="rtl">{selectedPageInfo.snippet}...</div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedPageInfo(null)}
+                                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };
 
-const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onEditJuz, onArchiveJuz }: { title: string, juzs: Juz[], onDeleteGroup: (n: string, j: Juz[]) => void, onDeleteJuz: (j: Juz) => void, onCompleteJuz: (j: Juz) => void, onEditJuz: (j: Juz) => void, onArchiveJuz: (j: Juz) => void }) => {
+const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onEditJuz, onArchiveJuz, onTogglePage }: { title: string, juzs: Juz[], onDeleteGroup: (n: string, j: Juz[]) => void, onDeleteJuz: (j: Juz) => void, onCompleteJuz: (j: Juz) => void, onEditJuz: (j: Juz) => void, onArchiveJuz: (j: Juz) => void, onTogglePage: (id: string, p: number, r: boolean) => void }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [showAddInGroup, setShowAddInGroup] = useState(false);
+    const [showCompletedGrid, setShowCompletedGrid] = useState(false);
 
+    const activeJuzs = juzs.filter(j => !j.isArchived);
     const totalPages = juzs.reduce((acc, j) => acc + (j.toplamSayfa || 20), 0);
     const readPages = juzs.reduce((acc, j) => acc + (j.okunanSayfalar?.length || 0), 0);
     const progress = totalPages > 0 ? Math.round((readPages / totalPages) * 100) : 0;
-    const sortedJuzs = [...juzs].sort((a, b) => (a.juzNo || 0) - (b.juzNo || 0));
+    const sortedJuzs = [...activeJuzs].sort((a, b) => (a.juzNo || 0) - (b.juzNo || 0));
     const existingJuzNos = juzs.map(j => j.juzNo).filter(n => n !== undefined && n > 0) as number[];
+
+    // Extract all completed juz numbers (both active-completed and archived)
+    const completedJuzNos = Array.from(new Set(
+        juzs.filter(j => j.juzNo && (j.isArchived || j.okunanSayfalar.length >= (j.toplamSayfa || 20)))
+            .map(j => j.juzNo as number)
+    )).sort((a, b) => a - b);
 
     return (
         <div className="space-y-2">
-            <motion.div layout onClick={() => setIsExpanded(!isExpanded)} className={`glass-card p-5 rounded-2xl flex items-center justify-between cursor-pointer border transition-all ${isExpanded ? 'border-[#C59E57]/50 bg-[#C59E57]/5' : 'border-white/5 hover:border-white/10'}`}>
+            <motion.div layout onClick={() => setIsExpanded(!isExpanded)} className={`glass-card p-5 rounded-2xl flex items-center justify-between cursor-pointer border transition-all ${isExpanded ? 'border-secondary/50 bg-secondary/5' : 'border-[var(--border)] hover:border-foreground/10'}`}>
                 <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner transition-colors ${progress === 100 ? 'bg-green-500/20 text-green-500' : 'bg-[#C59E57]/20 text-[#C59E57]'}`}>{isExpanded ? <FolderOpen className="w-6 h-6" /> : <Folder className="w-6 h-6" />}</div>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner transition-colors ${progress === 100 ? 'bg-green-500/20 text-green-500' : 'bg-secondary/20 text-secondary'}`}>{isExpanded ? <FolderOpen className="w-6 h-6" /> : <Folder className="w-6 h-6" />}</div>
                     <div>
-                        <h3 className="font-bold text-lg text-white group-hover:text-[#C59E57] transition-colors">{title}</h3>
-                        <p className="text-xs text-white/40 font-medium">{juzs.length} Parça • %{progress} Tamamlandı</p>
+                        <h3 className="font-bold text-lg text-foreground group-hover:text-secondary transition-colors">{title}</h3>
+                        <p className="text-xs text-foreground/40 font-medium font-sans">{juzs.length} Parça • %{progress} Tamamlandı</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }}
-                            className="flex items-center gap-2 bg-[#C59E57] text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-[#b08d4b] transition-all shadow-lg shadow-[#C59E57]/20 active:scale-95 z-20"
+                            className="flex items-center gap-2 bg-secondary text-white px-3 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-lg shadow-secondary/20 active:scale-95 z-20 font-sans"
                         >
                             <Plus className="w-4 h-4" />
                             <span className="hidden min-[380px]:inline">Ekle</span>
                         </button>
-                        <div className="text-right hidden sm:block">
-                            <span className="text-xs text-white/30 font-mono block">{readPages} / {totalPages} Sayfa</span>
-                            <div className="w-24 h-1.5 bg-black/20 rounded-full mt-1 overflow-hidden"><div className="h-full bg-[#C59E57]" style={{ width: `${progress}%` }} /></div>
+                        <div className="text-right hidden sm:block font-sans">
+                            <span className="text-xs text-foreground/30 font-bold block leading-none">{readPages} / {totalPages} Sayfa</span>
+                            <div className="w-24 h-1.5 bg-foreground/[0.08] dark:bg-foreground/5 rounded-full mt-1.5 overflow-hidden"><div className="h-full bg-secondary" style={{ width: `${progress}%` }} /></div>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }} className="w-8 h-8 rounded-full bg-[#C59E57]/10 flex items-center justify-center text-[#C59E57]/50 hover:bg-[#C59E57] hover:text-white transition-all backdrop-blur-sm z-20"><Plus className="w-4 h-4" /></button>
+                        {completedJuzNos.length > 0 && (
+                            <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCompletedGrid(!showCompletedGrid); }}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-sm z-20 ${showCompletedGrid ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'}`}
+                                title="Biten Cüzleri Göster"
+                            >
+                                <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                        )}
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }} className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary/50 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Plus className="w-4 h-4" /></button>
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteGroup(title, juzs); }} className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"><Trash2 className="w-4 h-4" /></button>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:bg-[#C59E57] hover:text-white transition-all backdrop-blur-sm z-20"><Edit2 className="w-4 h-4" /></button>
-                        <div className={`p-2 rounded-full transition-all ${isExpanded ? 'bg-white/10 rotate-180' : 'bg-white/5'}`}><ChevronDown className="w-5 h-5 text-white/50" /></div>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }} className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/40 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Edit2 className="w-4 h-4" /></button>
+                        <div className={`p-2 rounded-full transition-all ${isExpanded ? 'bg-foreground/10 rotate-180' : 'bg-foreground/5'}`}><ChevronDown className="w-5 h-5 text-foreground/40" /></div>
                     </div>
                 </div>
                 {isEditing && <EditGroupModal groupName={title} juzs={juzs} onClose={() => setIsEditing(false)} />}
                 <AnimatePresence>{showAddInGroup && <AddJuzModal initialGroupName={title} existingJuzs={existingJuzNos} onClose={() => setShowAddInGroup(false)} />}</AnimatePresence>
             </motion.div>
+
+            <AnimatePresence>
+                {showCompletedGrid && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="glass-card p-4 rounded-2xl border border-green-500/20 bg-green-500/5 mb-2">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[10px] font-bold text-green-600/60 dark:text-green-400/40 uppercase tracking-widest flex items-center gap-2">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Okunan / Arşivlenen Cüzler
+                                </span>
+                                <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-md">
+                                    {completedJuzNos.length} Cüz Bitti
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {completedJuzNos.map(n => (
+                                    <div key={n} className="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center text-xs font-bold shadow-sm shadow-green-500/20">
+                                        {n}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             <AnimatePresence>
                 {isExpanded && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pl-4 border-l-2 border-white/5 ml-6 py-2">
-                        {sortedJuzs.map(juz => <JuzCard key={juz.id} juz={juz} isChild onDelete={onDeleteJuz} onComplete={onCompleteJuz} onEdit={onEditJuz} onArchive={onArchiveJuz} />)}
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pl-4 border-l-2 border-[var(--border)] ml-6 py-2">
+                        {sortedJuzs.map(juz => <JuzCard key={juz.id} juz={juz} isChild onDelete={onDeleteJuz} onComplete={onCompleteJuz} onEdit={onEditJuz} onArchive={onArchiveJuz} onTogglePage={onTogglePage} />)}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -175,12 +370,18 @@ export default function Dashboard() {
     const [editingJuz, setEditingJuz] = useState<Juz | null>(null);
     const [targetPage, setTargetPage] = useState('');
 
+    const hicriTarih = new Intl.DateTimeFormat('tr-TR-u-ca-islamic', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    }).format(new Date()).replace(/Hicri /g, '');
+
     useEffect(() => {
         if (!user) return;
         const q = query(collection(db, 'users', user.uid, 'juzler'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Juz));
-            setJuzler(docs.filter(j => !j.isArchived));
+            setJuzler(docs);
             setLoading(false);
         });
         return unsubscribe;
@@ -218,6 +419,17 @@ export default function Dashboard() {
         };
         checkAndCreateMonthlyTracker();
     }, [user]);
+
+    const handleTogglePage = async (juzId: string, pageNum: number, currentlyRead: boolean) => {
+        if (!user) return;
+        const juzRef = doc(db, 'users', user.uid, 'juzler', juzId);
+        try {
+            await updateDoc(juzRef, {
+                okunanSayfalar: currentlyRead ? arrayRemove(pageNum) : arrayUnion(pageNum),
+                updatedAt: serverTimestamp()
+            });
+        } catch (error) { console.error("Toggle error:", error); }
+    };
 
     const handleArchive = async (juz: Juz) => {
         if (!user) return;
@@ -289,17 +501,21 @@ export default function Dashboard() {
         <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 px-4">
             <AnimatePresence>{showProfileModal && <ProfileModal user={user} profile={profile} onClose={() => setShowProfileModal(false)} />}</AnimatePresence>
 
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                    <div onClick={() => setShowProfileModal(true)} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-all cursor-pointer overflow-hidden group">
-                        {profile?.photoURL ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <User className="w-5 h-5" />}
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                    <div onClick={() => setShowProfileModal(true)} className="w-14 h-14 rounded-2xl bg-foreground/5 border border-[var(--border)] flex items-center justify-center text-foreground/50 hover:bg-foreground/10 hover:text-foreground transition-all cursor-pointer overflow-hidden group shadow-sm">
+                        {profile?.photoURL ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <User className="w-6 h-6" />}
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-white leading-tight">Merhaba, {profile?.displayName?.split(' ')[0] || 'Kullanıcı'}</h1>
-                        <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Bugün ne okuyoruz?</p>
+                        <h1 className="text-2xl font-black text-foreground tracking-tight leading-none mb-1.5">{hicriTarih}</h1>
+                        <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-foreground/40 font-sans">
+                            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-secondary" /> {stats.completedCount} BİTTİ</div>
+                            <div className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-secondary" /> {stats.totalRead} SAYFA</div>
+                            <div className="flex items-center gap-1"><TrendingUp className="w-3 h-3 text-secondary" /> {stats.activeCount} AKTİF</div>
+                        </div>
                     </div>
                 </div>
-                <button onClick={() => setShowProfileModal(true)} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white/40 hover:text-white transition-all border border-white/5 group"><Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" /></button>
+                <button onClick={() => setShowProfileModal(true)} className="p-3 bg-foreground/5 hover:bg-foreground/10 rounded-2xl text-foreground/40 hover:text-foreground transition-all border border-[var(--border)] group shadow-sm"><Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" /></button>
             </div>
 
             {profile?.showInstallBanner !== false && <InstallPWA />}
@@ -307,15 +523,15 @@ export default function Dashboard() {
 
             <AnimatePresence>
                 {showPageModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-[#1a1a1a] border border-white/10 w-full max-w-sm rounded-[32px] p-6 shadow-2xl relative">
-                            <button onClick={() => setShowPageModal(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 grid place-items-center text-white/40 hover:text-white hover:bg-white/10"><X className="w-4 h-4" /></button>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/60 p-4 backdrop-blur-sm">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-card glass-card border-[var(--border)] w-full max-w-sm rounded-[32px] p-6 shadow-2xl relative">
+                            <button onClick={() => setShowPageModal(false)} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-foreground/5 grid place-items-center text-foreground/40 hover:text-foreground hover:bg-foreground/10"><X className="w-4 h-4" /></button>
                             <div className="text-center space-y-4 pt-2">
-                                <Search className="w-12 h-12 text-[#C59E57] mx-auto" />
-                                <h3 className="text-xl font-bold text-white">Sayfaya Git</h3>
+                                <Search className="w-12 h-12 text-secondary mx-auto" />
+                                <h3 className="text-xl font-bold text-foreground">Sayfaya Git</h3>
                                 <form onSubmit={handlePageSubmit} className="space-y-4">
-                                    <input type="number" placeholder="Sayfa No" value={targetPage} onChange={(e) => setTargetPage(e.target.value)} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-4 text-center text-2xl font-bold text-white focus:outline-none focus:border-[#C59E57]" autoFocus />
-                                    <button type="submit" className="w-full bg-[#C59E57] text-white font-bold py-4 rounded-xl">Git</button>
+                                    <input type="number" placeholder="Sayfa No" value={targetPage} onChange={(e) => setTargetPage(e.target.value)} className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-4 text-center text-2xl font-bold text-foreground focus:outline-none focus:border-secondary" autoFocus />
+                                    <button type="submit" className="w-full bg-secondary text-white font-bold py-4 rounded-xl shadow-lg shadow-secondary/20">Git</button>
                                 </form>
                             </div>
                         </motion.div>
@@ -327,33 +543,26 @@ export default function Dashboard() {
             {editingJuz && <EditJuzModal juz={editingJuz} onClose={() => setEditingJuz(null)} />}
 
             {profile?.showResumeReading !== false && lastActiveJuz && (
-                <div className="bg-[#C59E57] rounded-3xl p-6 flex items-center justify-between shadow-lg relative overflow-hidden group">
+                <div className="bg-secondary rounded-3xl p-6 flex items-center justify-between shadow-lg relative overflow-hidden group">
                     <div className="relative z-10 flex items-center gap-4">
                         <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"><BookOpen className="text-white w-6 h-6" /></div>
                         <div>
                             <h2 className="text-white font-bold text-lg">{getSurahName(currentGlobalPage)}</h2>
-                            <p className="text-white/70 text-xs font-medium">Sayfa {lastReadPage} (Cüz {lastActiveJuz.juzNo})</p>
+                            <p className="text-white/70 text-xs font-medium font-sans">Sayfa {lastReadPage} (Cüz {lastActiveJuz.juzNo})</p>
                         </div>
                     </div>
-                    <Link to={`/juz/${lastActiveJuz.id}`} className="relative z-10 bg-white text-[#C59E57] px-4 py-2 rounded-xl text-xs font-bold">Okumaya Devam Et</Link>
+                    <Link to={`/juz/${lastActiveJuz.id}`} className="relative z-10 bg-white text-secondary px-4 py-2 rounded-xl text-xs font-bold font-sans">Okumaya Devam Et</Link>
                 </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-                <Link to="/juzs" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-all h-40"><BookOpen className="w-8 h-8 text-[#C59E57]" /><span className="text-white font-medium text-sm">Cüz İndeksi</span></Link>
-                <Link to="/surahs" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 transition-all h-40 text-center"><svg className="w-8 h-8 text-[#C59E57]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L4 7v13h16V7l-8-5z" /><path d="M10 20v-6h4v6" /></svg><span className="text-white font-medium text-sm">Sure İndeksi</span></Link>
-                <button onClick={() => setShowPageModal(true)} className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 h-40 text-white font-medium text-sm"><Search className="w-8 h-8 text-[#C59E57]" />Sayfaya Git</button>
-                <Link to="/bookmarks" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-white/5 h-40"><div className="w-8 h-8 text-[#C59E57]"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg></div><span className="text-white font-medium text-sm">Yer İmleri</span></Link>
-            </div>
-
             <div className="flex items-center justify-between px-2 pt-4">
-                <h2 className="text-lg font-bold text-white">Okuma Takibi</h2>
-                <button onClick={() => setShowModal(true)} className="flex items-center gap-2 text-[#C59E57] font-bold text-xs bg-[#C59E57]/10 px-3 py-1.5 rounded-lg"><Plus className="w-4 h-4" /> Yeni Ekle</button>
+                <h2 className="text-lg font-bold text-foreground">Okuma Takibi</h2>
+                <button onClick={() => setShowModal(true)} className="flex items-center gap-2 text-secondary font-bold text-xs bg-secondary/10 px-3 py-1.5 rounded-lg hover:bg-secondary/20 transition-all"><Plus className="w-4 h-4" /> Yeni Ekle</button>
             </div>
 
             <main className="space-y-4">
                 {loading ? <div className="grid gap-4"><div className="glass-card h-32 rounded-3xl animate-pulse" /></div> :
-                    juzler.length === 0 ? <div className="text-center py-16 glass-card rounded-[40px]"><BookOpen className="w-16 h-16 text-white/5 mx-auto mb-6" /><h3 className="text-white/60">Henüz cüz eklenmemiş</h3></div> :
+                    juzler.length === 0 ? <div className="text-center py-16 glass-card rounded-[40px] border-[var(--border)]"><BookOpen className="w-16 h-16 text-foreground/5 mx-auto mb-6" /><h3 className="text-foreground/40 font-sans">Henüz cüz eklenmemiş</h3></div> :
                         <div className="grid gap-4">
                             {Object.entries(juzler.reduce((acc, juz) => {
                                 let key = juz.groupName || 'ungrouped';
@@ -362,12 +571,19 @@ export default function Dashboard() {
                                 return acc;
                             }, {} as Record<string, Juz[]>)).sort((a, b) => a[0] === 'ungrouped' ? 1 : b[0] === 'ungrouped' ? -1 : 0).map(([groupName, groupJuzs]) => (
                                 groupName === 'ungrouped'
-                                    ? groupJuzs.map(juz => <JuzCard key={juz.id} juz={juz} onDelete={handleDelete} onComplete={handleCompleteJuz} onEdit={setEditingJuz} onArchive={handleArchive} />)
-                                    : <GroupCard key={groupName} title={groupName} juzs={groupJuzs} onDeleteGroup={handleDeleteGroup} onDeleteJuz={handleDelete} onCompleteJuz={handleCompleteJuz} onEditJuz={setEditingJuz} onArchiveJuz={handleArchive} />
+                                    ? groupJuzs.filter(j => !j.isArchived).map(juz => <JuzCard key={juz.id} juz={juz} onDelete={handleDelete} onComplete={handleCompleteJuz} onEdit={setEditingJuz} onArchive={handleArchive} onTogglePage={handleTogglePage} />)
+                                    : <GroupCard key={groupName} title={groupName} juzs={groupJuzs} onDeleteGroup={handleDeleteGroup} onDeleteJuz={handleDelete} onCompleteJuz={handleCompleteJuz} onEditJuz={setEditingJuz} onArchiveJuz={handleArchive} onTogglePage={handleTogglePage} />
                             ))}
                         </div>
                 }
             </main>
+
+            <div className="grid grid-cols-2 gap-4">
+                <Link to="/juzs" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 transition-all h-40"><BookOpen className="w-8 h-8 text-secondary" /><span className="text-foreground font-medium text-sm">Cüz İndeksi</span></Link>
+                <Link to="/surahs" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 transition-all h-40 text-center"><svg className="w-8 h-8 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L4 7v13h16V7l-8-5z" /><path d="M10 20v-6h4v6" /></svg><span className="text-foreground font-medium text-sm">Sure İndeksi</span></Link>
+                <button onClick={() => setShowPageModal(true)} className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 h-40 text-foreground font-medium text-sm transition-all"><Search className="w-8 h-8 text-secondary" />Sayfaya Git</button>
+                <Link to="/bookmarks" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 h-40 transition-all"><div className="w-8 h-8 text-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg></div><span className="text-foreground font-medium text-sm">Yer İmleri</span></Link>
+            </div>
         </div>
     );
 }

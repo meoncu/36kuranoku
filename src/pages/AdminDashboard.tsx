@@ -140,11 +140,11 @@ export default function AdminDashboard() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
                         <ShieldAlert className="text-red-500" />
                         Yönetici Paneli
                     </h1>
-                    <p className="text-white/50">Tüm kullanıcı hareketleri ve sistem durumu</p>
+                    <p className="text-foreground/50">Tüm kullanıcı hareketleri ve sistem durumu</p>
 
                     {users.some(u => !u.isApproved) && (
                         <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 animate-pulse cursor-pointer hover:bg-red-500/20 transition-colors"
@@ -159,31 +159,31 @@ export default function AdminDashboard() {
                         </div>
                     )}
                 </div>
-                <div className="flex bg-white/5 p-1 rounded-xl">
+                <div className="flex bg-foreground/5 p-1 rounded-xl">
                     <button
                         onClick={() => setActiveTab('overview')}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-primary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'overview' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
                     >
                         <LayoutGrid className="w-4 h-4" />
                         Genel
                     </button>
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'users' ? 'bg-primary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'users' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
                     >
                         <Users className="w-4 h-4" />
                         Kullanıcılar
                     </button>
                     <button
                         onClick={() => setActiveTab('activity')}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'activity' ? 'bg-primary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'activity' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
                     >
                         <Activity className="w-4 h-4" />
                         Hareketler
                     </button>
                     <button
                         onClick={() => setActiveTab('trackers')}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'trackers' ? 'bg-primary text-white shadow-lg' : 'text-white/50 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'trackers' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/50 hover:text-foreground'}`}
                     >
                         <BookOpen className="w-4 h-4" />
                         Takipler
@@ -200,8 +200,8 @@ export default function AdminDashboard() {
                             <div className="w-12 h-12 rounded-2xl bg-blue-500/20 grid place-items-center text-blue-500 mb-4">
                                 <Users className="w-6 h-6" />
                             </div>
-                            <h3 className="text-white/50 font-medium mb-1">Toplam Kullanıcı</h3>
-                            <p className="text-4xl font-bold text-white">{stats.totalUsers}</p>
+                            <h3 className="text-foreground/50 font-medium mb-1">Toplam Kullanıcı</h3>
+                            <p className="text-4xl font-bold text-foreground">{stats.totalUsers}</p>
                         </div>
                     </div>
 
@@ -211,9 +211,9 @@ export default function AdminDashboard() {
                             <div className="w-12 h-12 rounded-2xl bg-green-500/20 grid place-items-center text-green-500 mb-4">
                                 <Activity className="w-6 h-6" />
                             </div>
-                            <h3 className="text-white/50 font-medium mb-1">Bugünkü Aktivite</h3>
-                            <p className="text-4xl font-bold text-white">{stats.activeToday}</p>
-                            <span className="text-xs text-white/30">Son 20 işlem içinde</span>
+                            <h3 className="text-foreground/50 font-medium mb-1">Bugünkü Aktivite</h3>
+                            <p className="text-4xl font-bold text-foreground">{stats.activeToday}</p>
+                            <span className="text-xs text-foreground/30">Son 20 işlem içinde</span>
                         </div>
                     </div>
 
@@ -223,8 +223,8 @@ export default function AdminDashboard() {
                             <div className="w-12 h-12 rounded-2xl bg-[#C59E57]/20 grid place-items-center text-[#C59E57] mb-4">
                                 <BookOpen className="w-6 h-6" />
                             </div>
-                            <h3 className="text-white/50 font-medium mb-1">Aktif Takipler</h3>
-                            <p className="text-4xl font-bold text-white">~{stats.totalTrackers}</p>
+                            <h3 className="text-foreground/50 font-medium mb-1">Aktif Takipler</h3>
+                            <p className="text-4xl font-bold text-foreground">~{stats.totalTrackers}</p>
                         </div>
                     </div>
                 </div>
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
 
             {/* Users Tab */}
             {activeTab === 'users' && (
-                <div className="glass-card rounded-3xl overflow-hidden border border-white/5">
+                <div className="glass-card rounded-3xl overflow-hidden border border-[var(--border)]">
                     {/* Permission Hint for Developer */}
                     {users.length <= 1 && !error && (
                         <div className="bg-yellow-500/10 p-4 border-b border-yellow-500/20 flex items-start gap-3">
@@ -250,19 +250,19 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    <div className="p-4 border-b border-white/5 bg-white/5 flex items-center gap-4">
-                        <Search className="w-5 h-5 text-white/30" />
+                    <div className="p-4 border-b border-[var(--border)] bg-foreground/5 flex items-center gap-4">
+                        <Search className="w-5 h-5 text-foreground/30" />
                         <input
                             type="text"
                             placeholder="Kullanıcı ara (Email veya İsim)..."
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            className="bg-transparent border-none focus:outline-none text-white w-full placeholder:text-white/30"
+                            className="bg-transparent border-none focus:outline-none text-foreground w-full placeholder:text-foreground/30 font-sans"
                         />
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-white/70">
-                            <thead className="bg-white/5 text-white font-bold uppercase text-xs tracking-wider">
+                        <table className="w-full text-left text-sm text-foreground/70">
+                            <thead className="bg-foreground/5 text-foreground font-bold uppercase text-xs tracking-wider">
                                 <tr>
                                     <th className="p-4">Kullanıcı</th>
                                     <th className="p-4">Kayıt Tarihi</th>
@@ -270,35 +270,35 @@ export default function AdminDashboard() {
                                     <th className="p-4 text-right">Yönetim</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="divide-y divide-[var(--border)]">
                                 {users.filter(u =>
                                     (u.email?.toLowerCase() || '').includes(filter.toLowerCase()) ||
                                     (u.displayName?.toLowerCase() || '').includes(filter.toLowerCase())
                                 ).map(u => (
-                                    <tr key={u.id} className={`hover:bg-white/5 transition-colors ${!u.isApproved ? 'bg-red-500/5' : ''}`}>
+                                    <tr key={u.id} className={`hover:bg-foreground/5 transition-colors ${!u.isApproved ? 'bg-red-500/5' : ''}`}>
                                         <td className="p-4 flex items-center gap-3">
                                             {u.photoURL ? (
-                                                <img src={u.photoURL} className="w-8 h-8 rounded-full bg-white/10" alt="" />
+                                                <img src={u.photoURL} className="w-8 h-8 rounded-full bg-foreground/10" alt="" />
                                             ) : (
-                                                <div className="w-8 h-8 rounded-full bg-white/10 grid place-items-center">
-                                                    <Users className="w-4 h-4" />
+                                                <div className="w-8 h-8 rounded-full bg-foreground/10 grid place-items-center">
+                                                    <Users className="w-4 h-4 text-foreground/40" />
                                                 </div>
                                             )}
                                             <div>
-                                                <div className="font-bold text-white">{u.displayName || 'İsimsiz'}</div>
-                                                <div className="font-mono text-xs opacity-50 mb-2">{u.email}</div>
+                                                <div className="font-bold text-foreground">{u.displayName || 'İsimsiz'}</div>
+                                                <div className="font-mono text-xs text-foreground/30 mb-2">{u.email}</div>
                                                 <div className="flex gap-2">
-                                                    <span title="Namaz Vakitleri" className={`w-2 h-2 rounded-full ${u.showPrayerTimes !== false ? 'bg-blue-500' : 'bg-white/10'}`} />
-                                                    <span title="Kaldığım Yer" className={`w-2 h-2 rounded-full ${u.showResumeReading !== false ? 'bg-[#C59E57]' : 'bg-white/10'}`} />
-                                                    <span title="Yükleme Paneli" className={`w-2 h-2 rounded-full ${u.showInstallBanner !== false ? 'bg-primary' : 'bg-white/10'}`} />
+                                                    <span title="Namaz Vakitleri" className={`w-2 h-2 rounded-full ${u.showPrayerTimes !== false ? 'bg-blue-500' : 'bg-foreground/10'}`} />
+                                                    <span title="Kaldığım Yer" className={`w-2 h-2 rounded-full ${u.showResumeReading !== false ? 'bg-[#C59E57]' : 'bg-foreground/10'}`} />
+                                                    <span title="Yükleme Paneli" className={`w-2 h-2 rounded-full ${u.showInstallBanner !== false ? 'bg-primary' : 'bg-foreground/10'}`} />
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex items-center gap-2 text-xs">
-                                                <Clock className="w-3 h-3 text-white/30" />
+                                            <div className="flex items-center gap-2 text-xs font-sans">
+                                                <Clock className="w-3 h-3 text-foreground/30" />
                                                 {u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('tr-TR') : '-'}
-                                                <span className="text-white/30 text-[10px]">
+                                                <span className="text-foreground/30 text-[10px]">
                                                     ({u.createdAt?.toDate ? u.createdAt.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''})
                                                 </span>
                                             </div>
@@ -320,9 +320,9 @@ export default function AdminDashboard() {
                                             {u.id !== user?.uid && (
                                                 <button
                                                     onClick={() => handleToggleStatus(u.id, u.isApproved)}
-                                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95 ${!u.isApproved
-                                                        ? 'bg-[#C59E57] hover:bg-[#b08d4b] text-white ring-2 ring-[#C59E57]/20 ring-offset-2 ring-offset-black'
-                                                        : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white'
+                                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95 font-sans ${!u.isApproved
+                                                        ? 'bg-secondary hover:bg-opacity-90 text-white ring-2 ring-secondary/20 ring-offset-2 ring-offset-background'
+                                                        : 'bg-foreground/5 hover:bg-foreground/10 text-foreground/50 hover:text-foreground'
                                                         }`}
                                                 >
                                                     {!u.isApproved ? 'Onayla ve Aktif Et' : 'Pasife Al'}
@@ -350,23 +350,23 @@ export default function AdminDashboard() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05 }}
-                                className="glass-card p-4 rounded-2xl flex items-center gap-4 hover:bg-white/5 transition-colors"
+                                className="glass-card p-4 rounded-2xl flex items-center gap-4 hover:bg-foreground/5 transition-colors border border-[var(--border)]"
                             >
-                                <div className="w-10 h-10 rounded-full bg-[#C59E57]/10 flex items-center justify-center text-[#C59E57] shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary shrink-0">
                                     <Activity className="w-5 h-5" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-bold text-white text-sm">
+                                        <span className="font-bold text-foreground text-sm">
                                             {userInfo?.displayName || userInfo?.email || 'Bilinmeyen Kullanıcı'}
                                         </span>
-                                        <span className="text-white/30 text-xs">•</span>
-                                        <span className="text-white/40 text-xs font-mono">
+                                        <span className="text-foreground/30 text-xs">•</span>
+                                        <span className="text-foreground/40 text-xs font-mono">
                                             {activity.updatedAt?.toDate().toLocaleString('tr-TR')}
                                         </span>
                                     </div>
-                                    <p className="text-white/70 text-sm truncate">
-                                        <span className="text-[#C59E57] font-medium">{activity.title}</span> üzerinde işlem yaptı.
+                                    <p className="text-foreground/70 text-sm truncate">
+                                        <span className="text-secondary font-medium">{activity.title}</span> üzerinde işlem yaptı.
                                     </p>
                                 </div>
                             </motion.div>
@@ -378,14 +378,14 @@ export default function AdminDashboard() {
             {/* Trackers Tab */}
             {activeTab === 'trackers' && (
                 <div className="space-y-6">
-                    <div className="glass-card p-4 rounded-2xl flex items-center gap-4 bg-white/5 border border-white/10">
-                        <Search className="w-5 h-5 text-white/30" />
+                    <div className="glass-card p-4 rounded-2xl flex items-center gap-4 bg-foreground/5 border border-[var(--border)]">
+                        <Search className="w-5 h-5 text-foreground/30" />
                         <input
                             type="text"
                             placeholder="Takip veya kullanıcı ara..."
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            className="bg-transparent border-none focus:outline-none text-white w-full placeholder:text-white/30"
+                            className="bg-transparent border-none focus:outline-none text-foreground w-full placeholder:text-foreground/30 font-sans"
                         />
                     </div>
 
@@ -408,55 +408,55 @@ export default function AdminDashboard() {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: i * 0.03 }}
-                                        className="glass-card p-5 rounded-3xl border border-white/5 hover:border-primary/20 transition-all group"
+                                        className="glass-card p-5 rounded-3xl border border-[var(--border)] hover:border-secondary/20 transition-all group"
                                     >
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                                <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
                                                     {tracker.type === 'monthly_page' ? <Calendar className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-white font-bold leading-tight">{tracker.title}</h4>
-                                                    <p className="text-white/30 text-[10px] uppercase tracking-wider font-bold">
+                                                    <h4 className="text-foreground font-bold leading-tight">{tracker.title}</h4>
+                                                    <p className="text-foreground/30 text-[10px] uppercase tracking-wider font-bold font-sans">
                                                         {tracker.type === 'monthly_page' ? 'Aylık Takip' : tracker.type === 'surah' ? 'Sure' : 'Cüz'}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="text-primary font-black text-lg">%{progress}</div>
-                                                <div className="text-white/20 text-[9px] font-bold uppercase">İlerleme</div>
+                                            <div className="text-right font-sans">
+                                                <div className="text-secondary font-black text-lg">%{progress}</div>
+                                                <div className="text-foreground/20 text-[9px] font-bold uppercase">İlerleme</div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+                                        <div className="flex items-center gap-3 p-3 bg-foreground/5 rounded-2xl border border-[var(--border)]">
                                             {userInfo?.photoURL ? (
                                                 <img src={userInfo.photoURL} className="w-8 h-8 rounded-lg" alt="" />
                                             ) : (
-                                                <div className="w-8 h-8 rounded-lg bg-white/10 grid place-items-center text-white/30">
+                                                <div className="w-8 h-8 rounded-lg bg-foreground/10 grid place-items-center text-foreground/30">
                                                     <User className="w-4 h-4" />
                                                 </div>
                                             )}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-white/80 font-bold text-xs truncate">
+                                            <div className="flex-1 min-w-0 font-sans">
+                                                <div className="text-foreground/80 font-bold text-xs truncate">
                                                     {userInfo?.displayName || 'İsimsiz'}
                                                 </div>
-                                                <div className="text-white/30 text-[10px] truncate">{userInfo?.email}</div>
+                                                <div className="text-foreground/30 text-[10px] truncate">{userInfo?.email}</div>
                                             </div>
                                             {tracker.isArchived && (
-                                                <span className="bg-white/10 text-white/40 px-2 py-0.5 rounded text-[8px] font-bold uppercase">Arşiv</span>
+                                                <span className="bg-foreground/10 text-foreground/40 px-2 py-0.5 rounded text-[8px] font-bold uppercase font-sans">Arşiv</span>
                                             )}
                                         </div>
 
-                                        <div className="mt-4 space-y-2">
-                                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/30">
+                                        <div className="mt-4 space-y-2 font-sans">
+                                            <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-foreground/30">
                                                 <span>Okunan: {tracker.okunanSayfalar?.length || 0} Sayfa</span>
                                                 <span>Toplam: {tracker.toplamSayfa || 20}</span>
                                             </div>
-                                            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                            <div className="h-1.5 bg-foreground/5 rounded-full overflow-hidden">
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${progress}%` }}
-                                                    className="h-full bg-primary"
+                                                    className="h-full bg-secondary"
                                                 />
                                             </div>
                                         </div>

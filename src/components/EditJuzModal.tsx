@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { X, Search, Trash2 } from 'lucide-react';
 import { Juz } from '../types';
 import { CHAPTERS } from '../constants/chapters';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface EditJuzModalProps {
     juz: Juz;
@@ -138,205 +139,210 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[999] grid place-items-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-            <div className="bg-[#1c1c1c] border border-white/10 w-full max-w-sm p-6 rounded-3xl relative animate-in fade-in zoom-in duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
-                <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
-                    <X className="w-6 h-6" />
-                </button>
+        <AnimatePresence>
+            <div className="fixed inset-0 z-[999] grid place-items-center p-4">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-background/80 backdrop-blur-md"
+                    onClick={onClose}
+                />
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    className="bg-card glass-card border border-[var(--border)] w-full max-w-sm p-6 rounded-[32px] relative shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+                >
+                    <button onClick={onClose} className="absolute top-4 right-4 text-foreground/30 hover:text-foreground transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
 
-                <h2 className="text-xl font-bold text-white mb-6">Takibi Düzenle</h2>
+                    <h2 className="text-xl font-bold text-foreground mb-6 font-sans">Takibi Düzenle</h2>
 
-                <div className="flex bg-white/5 p-1 rounded-xl mb-6 overflow-x-auto no-scrollbar">
-                    <button onClick={() => setSelectionType('juz')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'juz' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Cüz</button>
-                    <button onClick={() => setSelectionType('surah')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'surah' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Sure</button>
-                    <button onClick={() => setSelectionType('custom')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'custom' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Özel</button>
-                    <button onClick={() => setSelectionType('monthly_page')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-lg transition-all ${selectionType === 'monthly_page' ? 'bg-[#C59E57] text-white shadow-lg' : 'text-white/50 hover:text-white'}`}>Aylık</button>
-                </div>
+                    <div className="flex bg-foreground/5 p-1 rounded-[16px] mb-6 border border-[var(--border)] font-sans">
+                        <button onClick={() => setSelectionType('juz')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'juz' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Cüz</button>
+                        <button onClick={() => setSelectionType('surah')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'surah' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Sure</button>
+                        <button onClick={() => setSelectionType('custom')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'custom' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Özel</button>
+                        <button onClick={() => setSelectionType('monthly_page')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'monthly_page' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Aylık</button>
+                    </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Selection UI */}
-                    {selectionType === 'juz' && (
-                        <div>
-                            <label className="text-sm text-white/50 mb-1 block">Cüz Numarası</label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="30"
-                                value={juzNo}
-                                onChange={(e) => setJuzNo(Number(e.target.value))}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
-                            />
-                        </div>
-                    )}
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Selection UI */}
+                        {selectionType === 'juz' && (
+                            <div className="font-sans">
+                                <label className="text-xs text-foreground/40 mb-1 block font-bold uppercase tracking-widest">Cüz Numarası</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="30"
+                                    value={juzNo}
+                                    onChange={(e) => setJuzNo(Number(e.target.value))}
+                                    className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary transition-all"
+                                />
+                            </div>
+                        )}
 
-                    {selectionType === 'surah' && (
-                        <div className="space-y-2">
-                            <label className="text-sm text-white/50 mb-1 block">Sure Ara ve Seç</label>
-                            <div className="relative">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                        {selectionType === 'surah' && (
+                            <div className="space-y-3 font-sans">
+                                <label className="text-xs text-foreground/40 mb-1 block font-bold uppercase tracking-widest">Sure Seç</label>
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
+                                    <input
+                                        type="text"
+                                        placeholder="Ara..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl pl-10 pr-4 py-3 text-foreground text-sm focus:outline-none focus:border-secondary transition-colors"
+                                    />
+                                </div>
+
+                                <div className="max-h-40 overflow-y-auto bg-foreground/5 border border-[var(--border)] rounded-xl custom-scrollbar">
+                                    {CHAPTERS.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.toString().includes(searchQuery)).map(chapter => (
+                                        <button
+                                            key={chapter.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedSurahId(chapter.id);
+                                                if (!title || title.includes('Suresi') || title.includes('Cüz')) {
+                                                    setTitle(`${chapter.name} Suresi`);
+                                                }
+                                            }}
+                                            className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-foreground/5 transition-colors ${selectedSurahId === chapter.id ? 'bg-secondary/10 text-secondary' : 'text-foreground/80'}`}
+                                        >
+                                            <span className="font-medium">{chapter.id}. {chapter.name}</span>
+                                            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{chapter.verseCount} Ayet</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {selectionType === 'custom' && (
+                            <div className="grid grid-cols-2 gap-4 bg-foreground/5 p-4 rounded-2xl border border-[var(--border)] font-sans">
+                                <div>
+                                    <label className="text-[10px] font-bold text-foreground/40 mb-1 block uppercase tracking-widest">Başlangıç</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="604"
+                                        value={startPageCustom}
+                                        onChange={(e) => setStartPageCustom(Number(e.target.value))}
+                                        className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-secondary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-foreground/40 mb-1 block uppercase tracking-widest">Bitiş</label>
+                                    <input
+                                        type="number"
+                                        min={startPageCustom}
+                                        max="604"
+                                        value={endPageCustom}
+                                        onChange={(e) => setEndPageCustom(Number(e.target.value))}
+                                        className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-secondary"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {selectionType === 'monthly_page' && (
+                            <div className="space-y-4 font-sans">
+                                <div>
+                                    <label className="text-sm text-foreground/50 mb-1 block">Başlangıç Sayfası</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="20"
+                                        value={assignedPage}
+                                        onChange={(e) => setAssignedPage(Number(e.target.value))}
+                                        className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm text-foreground/50 mb-1 block">Başlangıç Ayı</label>
+                                    <input
+                                        type="month"
+                                        value={startMonth}
+                                        onChange={(e) => setStartMonth(e.target.value)}
+                                        className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-3 font-sans">
+                            <div>
+                                <label className="text-xs text-foreground/40 mb-1 block font-bold uppercase tracking-widest">Takip İsmi</label>
                                 <input
                                     type="text"
-                                    placeholder="Sure adı ara..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-secondary transition-colors"
-                                />
-                            </div>
-
-                            <div className="max-h-40 overflow-y-auto bg-black/20 border border-white/5 rounded-xl mt-2 custom-scrollbar">
-                                {CHAPTERS.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.id.toString().includes(searchQuery)).map(chapter => (
-                                    <button
-                                        key={chapter.id}
-                                        type="button"
-                                        onClick={() => {
-                                            setSelectedSurahId(chapter.id);
-                                            // Optional: Auto-update title if user selects a surah
-                                            if (!title || title.includes('Suresi') || title.includes('Cüz')) {
-                                                setTitle(`${chapter.name} Suresi`);
-                                            }
-                                        }}
-                                        className={`w-full text-left px-4 py-3 text-sm flex items-center justify-between hover:bg-white/5 transition-colors ${selectedSurahId === chapter.id ? 'bg-[#C59E57]/20 text-[#C59E57]' : 'text-white/80'}`}
-                                    >
-                                        <span>{chapter.id}. {chapter.name}</span>
-                                        <span className="text-xs opacity-50">{chapter.verseCount} Ayet</span>
-                                    </button>
-                                ))}
-                                {CHAPTERS.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                                    <div className="p-4 text-center text-white/30 text-xs">Sonuç bulunamadı</div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {selectionType === 'custom' && (
-                        <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl">
-                            <div>
-                                <label className="text-xs text-white/50 mb-1 block">Başlangıç Sayfa</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="604"
-                                    value={startPageCustom}
-                                    onChange={(e) => setStartPageCustom(Number(e.target.value))}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-secondary transition-colors"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:border-secondary transition-all"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs text-white/50 mb-1 block">Bitiş Sayfa</label>
+                                <label className="text-xs text-foreground/40 mb-1 block font-bold uppercase tracking-widest">Grup Adı</label>
                                 <input
-                                    type="number"
-                                    min={startPageCustom}
-                                    max="604"
-                                    value={endPageCustom}
-                                    onChange={(e) => setEndPageCustom(Number(e.target.value))}
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-secondary transition-colors"
-                                />
-                            </div>
-                            <p className="col-span-2 text-[10px] text-white/30 text-center">Toplam {Math.max(0, endPageCustom - startPageCustom + 1)} sayfalık bir plan oluşturuyorsunuz.</p>
-                        </div>
-                    )}
-
-                    {selectionType === 'monthly_page' && (
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-sm text-white/50 mb-1 block">Başlangıç Sayfası</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="20"
-                                    value={assignedPage}
-                                    onChange={(e) => setAssignedPage(Number(e.target.value))}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm text-white/50 mb-1 block">Başlangıç Ayı</label>
-                                <input
-                                    type="month"
-                                    value={startMonth}
-                                    onChange={(e) => setStartMonth(e.target.value)}
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary [color-scheme:dark]"
+                                    type="text"
+                                    value={groupName}
+                                    onChange={(e) => setGroupName(e.target.value)}
+                                    className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:border-secondary transition-all"
                                 />
                             </div>
                         </div>
-                    )}
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="text-xs text-white/50 mb-1 block">Takip İsmi</label>
+                        <div className="font-sans">
+                            <label className="text-sm text-foreground/50 mb-1 block">Atayan Kişi/Grup</label>
                             <input
                                 type="text"
-                                placeholder="Örn: Ramazan Mukabelesi"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-secondary"
+                                value={assignedBy}
+                                onChange={(e) => setAssignedBy(e.target.value)}
+                                className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary"
                             />
                         </div>
-                        <div>
-                            <label className="text-xs text-white/50 mb-1 block">Grup/Klasör Adı</label>
+
+                        <div className="font-sans">
+                            <label className="text-sm text-foreground/50 mb-1 block">Notlar</label>
+                            <textarea
+                                rows={3}
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary resize-none"
+                            />
+                        </div>
+
+                        <div className="font-sans">
+                            <label className="text-sm text-foreground/50 mb-1 block">Bitiş Hedefi</label>
                             <input
-                                type="text"
-                                placeholder="Örn: Hatm-i Şerif"
-                                value={groupName}
-                                onChange={(e) => setGroupName(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-secondary"
+                                type="date"
+                                required
+                                value={targetDate}
+                                onChange={(e) => setTargetDate(e.target.value)}
+                                className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary"
                             />
                         </div>
-                    </div>
 
-                    <div>
-                        <label className="text-sm text-white/50 mb-1 block">Atayan Kişi veya Grup</label>
-                        <input
-                            type="text"
-                            placeholder="Örn: Hatim Grubu"
-                            value={assignedBy}
-                            onChange={(e) => setAssignedBy(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-sm text-white/50 mb-1 block">Notlar</label>
-                        <textarea
-                            rows={3}
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary resize-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="text-sm text-white/50 mb-1 block">Hedef Bitiş Tarihi</label>
-                        <input
-                            type="date"
-                            required
-                            value={targetDate}
-                            onChange={(e) => setTargetDate(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-secondary [color-scheme:dark]"
-                        />
-                    </div>
-
-                    <div className="p-4 border-t border-white/10 flex items-center justify-between gap-3 bg-black/40">
-                        <button
-                            type="button"
-                            onClick={handleDelete}
-                            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-sm transition-all"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            Sil
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 bg-[#C59E57] hover:bg-[#b08d4b] text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
-                        >
-                            {loading ? 'Kaydediliyor...' : 'Kaydet'}
-                        </button>
-                    </div>
-                </form>
+                        <div className="pt-6 border-t border-[var(--border)] flex items-center justify-between gap-4 font-sans">
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="flex items-center gap-2 px-6 py-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-sm transition-all"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Sil
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 btn-secondary py-4 rounded-xl shadow-lg shadow-secondary/20 font-bold"
+                            >
+                                {loading ? 'Kaydediliyor...' : 'Kaydet'}
+                            </button>
+                        </div>
+                    </form>
+                </motion.div>
             </div>
-        </div>,
+        </AnimatePresence>,
         document.body
     );
 }

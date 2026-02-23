@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
@@ -16,9 +17,22 @@ function App() {
     const { user, profile, loading } = useAuth(); // profile comes from useAuth
     useMushafSettings(); // Initialize global settings
 
+    useEffect(() => {
+        if (profile?.theme) {
+            if (profile.theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        } else {
+            // Default to dark mode if no preference is set
+            document.documentElement.classList.add('dark');
+        }
+    }, [profile?.theme]);
+
     if (loading) {
         return (
-            <div className="min-h-screen grid place-items-center bg-background">
+            <div className="min-h-screen grid place-items-center bg-background text-foreground transition-colors duration-300">
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );

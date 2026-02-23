@@ -23,17 +23,17 @@ export default function Layout() {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            <header className="sticky top-0 z-50 glass-card border-b border-white/5 px-4 py-3 flex items-center justify-between">
+            <header className="sticky top-0 z-50 glass-card border-b border-[var(--border)] px-4 py-3 flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-2">
                     <BookOpen className="text-secondary w-6 h-6" />
-                    <h1 className="text-xl font-bold tracking-tight text-white">Kuran Takip</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-foreground">Kuran Takip</h1>
                 </Link>
 
                 <div className="flex items-center gap-3">
                     {isAdmin && (
                         <>
                             {/* Notification Bell */}
-                            <Link to="/admin?tab=users" className="relative p-2 mr-1 hover:bg-white/5 rounded-lg text-white/70 hover:text-white transition-colors">
+                            <Link to="/admin?tab=users" className="relative p-2 mr-1 hover:bg-foreground/5 rounded-lg text-foreground/70 hover:text-foreground transition-colors">
                                 <Bell className="w-5 h-5" />
                                 {pendingCount > 0 && (
                                     <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
@@ -46,11 +46,11 @@ export default function Layout() {
                         </>
                     )}
                     {user?.photoURL ? (
-                        <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-white/20" />
+                        <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-foreground/20" />
                     ) : (
-                        <UserIcon className="w-8 h-8 p-1 rounded-full border border-white/20" />
+                        <UserIcon className="w-8 h-8 p-1 rounded-full border border-foreground/20 text-foreground/50" />
                     )}
-                    <button onClick={logout} className="p-2 hover:bg-white/5 rounded-full text-white/70 hover:text-white transition-colors">
+                    <button onClick={logout} className="p-2 hover:bg-foreground/5 rounded-full text-foreground/70 hover:text-foreground transition-colors">
                         <LogOut className="w-5 h-5" />
                     </button>
                 </div>
@@ -62,9 +62,9 @@ export default function Layout() {
                 </div>
             </main>
 
-            <nav className="fixed bottom-0 left-0 right-0 glass-card border-t border-white/5 p-3 sm:hidden">
+            <nav className="fixed bottom-0 left-0 right-0 glass-card border-t border-[var(--border)] p-3 sm:hidden">
                 {/* Mobile navigation or quick stats can go here */}
-                <div className="text-center text-xs text-white/50">
+                <div className="text-center text-xs text-foreground/50">
                     Hoş geldin, {user?.displayName}
                 </div>
             </nav>

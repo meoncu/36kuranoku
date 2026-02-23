@@ -6,8 +6,29 @@
 
 @layer base {
   :root {
+    --primary: #1a5f7a;
+    --primary-foreground: #ffffff;
+    --secondary: #C59E57;
+    --secondary-foreground: #ffffff;
+    --background: #f8fafc;
+    --foreground: #0f172a;
+    --card: rgba(255, 255, 255, 0.82);
+    --card-foreground: #0f172a;
+    --border: rgba(15, 23, 42, 0.08);
     --mushaf-font: 'Diyanet Hamdullah', 'Scheherazade New', serif;
     --mushaf-size: 32px;
+  }
+
+  .dark {
+    --primary: #1a5f7a;
+    --primary-foreground: #ffffff;
+    --secondary: #C59E57;
+    --secondary-foreground: #ffffff;
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    --card: rgba(30, 41, 59, 0.7);
+    --card-foreground: #f8fafc;
+    --border: rgba(255, 255, 255, 0.1);
   }
 
   body {
@@ -89,7 +110,7 @@
 }
 
 .glass-card {
-  @apply bg-card backdrop-blur-md border border-white/10 shadow-xl;
+  @apply bg-card backdrop-blur-md border border-[var(--border)] shadow-xl;
 }
 
 .btn-primary {
@@ -110,7 +131,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full;
+  @apply bg-[var(--border)] rounded-full;
 }
 
 @keyframes fade-in {
@@ -141,9 +162,10 @@
   font-feature-settings: "kern" 1, "calt" 1;
 }
 
-/* Surah header styling */
 .surah-header {
-  @apply flex flex-col items-center justify-center py-6 my-4 border-2 border-primary/20 rounded-xl bg-primary/5 font-bold;
+  @apply flex flex-col items-center justify-center py-6 my-4 rounded-xl font-bold;
+  border: 2px solid var(--border);
+  background-color: color-mix(in srgb, var(--primary), transparent 95%);
 }
 
 /* Landscape Mode Optimizations */

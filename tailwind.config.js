@@ -4,22 +4,23 @@ export default {
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
+    darkMode: 'class',
     theme: {
         extend: {
             colors: {
                 primary: {
-                    DEFAULT: '#1a5f7a',
-                    foreground: '#ffffff',
+                    DEFAULT: 'var(--primary)',
+                    foreground: 'var(--primary-foreground)',
                 },
                 secondary: {
-                    DEFAULT: '#c9a66b',
-                    foreground: '#ffffff',
+                    DEFAULT: 'var(--secondary)',
+                    foreground: 'var(--secondary-foreground)',
                 },
-                background: '#0f172a',
-                foreground: '#f8fafc',
+                background: 'var(--background)',
+                foreground: 'var(--foreground)',
                 card: {
-                    DEFAULT: 'rgba(30, 41, 59, 0.7)',
-                    foreground: '#f8fafc',
+                    DEFAULT: 'var(--card)',
+                    foreground: 'var(--card-foreground)',
                 }
             },
             borderRadius: {

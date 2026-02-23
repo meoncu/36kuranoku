@@ -212,20 +212,20 @@ export default function Reader() {
     return (
         <div className="fixed inset-0 z-[60] bg-background flex flex-col overflow-hidden">
             {/* Top Navigation Bar */}
-            <div className="glass-card border-b border-white/5 p-4 flex items-center justify-between z-30 reader-header">
+            <div className="glass-card border-b border-[var(--border)] p-4 flex items-center justify-between z-30 reader-header bg-card/80 backdrop-blur-xl">
                 <button
                     onClick={() => {
                         if (readingMode === 'monthly') navigate(`/juz/monthly/${id}`);
                         else navigate('/');
                     }}
-                    className="p-2 hover:bg-white/5 rounded-xl text-white transition-colors"
+                    className="p-2 hover:bg-foreground/5 rounded-xl text-foreground transition-colors font-sans"
                     aria-label="Kapat"
                 >
                     <X className="w-6 h-6" />
                 </button>
                 <div className="text-center">
-                    <h2 className="text-sm font-bold text-white">{headerTitle}</h2>
-                    <p className="text-[10px] text-primary font-medium tracking-wider uppercase">
+                    <h2 className="text-sm font-bold text-foreground font-sans">{headerTitle}</h2>
+                    <p className="text-[10px] text-secondary font-bold tracking-widest uppercase font-sans">
                         Dinamik Tecvidli Render
                     </p>
                 </div>
@@ -233,7 +233,7 @@ export default function Reader() {
                     {/* Settings Trigger */}
                     <button
                         onClick={() => setShowSettings(!showSettings)}
-                        className={`p-2 rounded-xl transition-all border ${showSettings ? 'bg-primary/20 border-primary/50 text-primary' : 'hover:bg-white/5 border-white/10 text-white'}`}
+                        className={`p-2 rounded-xl transition-all border ${showSettings ? 'bg-secondary/20 border-secondary/50 text-secondary' : 'hover:bg-foreground/5 border-[var(--border)] text-foreground/50'}`}
                         aria-label="Ayarlar"
                     >
                         <Settings className="w-6 h-6" />
@@ -245,34 +245,34 @@ export default function Reader() {
                             <>
                                 {/* Backdrop */}
                                 <div
-                                    className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+                                    className="fixed inset-0 z-40 bg-background/20 backdrop-blur-[2px]"
                                     onClick={() => setShowSettings(false)}
                                 />
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95, y: -20 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                                    className="absolute right-4 top-full mt-4 w-72 bg-[#1a1a1a] border border-white/20 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 overflow-hidden"
+                                    className="absolute right-4 top-full mt-4 w-72 bg-card border border-[var(--border)] rounded-[24px] shadow-2xl z-50 overflow-hidden"
                                 >
-                                    <div className="p-4 space-y-6">
+                                    <div className="p-6 space-y-6">
                                         {/* Font Size Control */}
-                                        <div className="space-y-3">
+                                        <div className="space-y-4">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                                <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest flex items-center gap-2 font-sans">
                                                     <Type className="w-3 h-3" /> Metin Boyutu
                                                 </span>
-                                                <span className="text-xs font-bold text-primary">{fontSize}px</span>
+                                                <span className="text-xs font-bold text-secondary font-sans">{fontSize}px</span>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <button
                                                     onClick={() => setFontSize(prev => Math.max(16, prev - 2))}
-                                                    className="flex-1 p-2 bg-white/5 hover:bg-white/10 rounded-lg flex justify-center text-white transition-colors"
+                                                    className="flex-1 p-3 bg-foreground/5 hover:bg-foreground/10 rounded-xl flex justify-center text-foreground transition-all"
                                                 >
                                                     <Minus className="w-4 h-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => setFontSize(prev => Math.min(64, prev + 2))}
-                                                    className="flex-1 p-2 bg-white/5 hover:bg-white/10 rounded-lg flex justify-center text-white transition-colors"
+                                                    className="flex-1 p-3 bg-foreground/5 hover:bg-foreground/10 rounded-xl flex justify-center text-foreground transition-all"
                                                 >
                                                     <Plus className="w-4 h-4" />
                                                 </button>
@@ -280,8 +280,8 @@ export default function Reader() {
                                         </div>
 
                                         {/* Font Family Control */}
-                                        <div className="space-y-3">
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block">Yazı Tipi</span>
+                                        <div className="space-y-4">
+                                            <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest block font-sans">Yazı Tipi</span>
                                             <div className="grid grid-cols-1 gap-2">
                                                 {[
                                                     { name: 'Diyanet Abay', family: "'Diyanet Abay', serif" },
@@ -292,7 +292,7 @@ export default function Reader() {
                                                     <button
                                                         key={f.name}
                                                         onClick={() => setFontFamily(f.family)}
-                                                        className={`w-full text-left px-3 py-2.5 text-xs font-medium rounded-lg transition-all ${fontFamily === f.family ? 'bg-primary text-white shadow-lg' : 'hover:bg-white/5 text-gray-400 hover:text-white border border-transparent'}`}
+                                                        className={`w-full text-left px-4 py-3 text-xs font-medium rounded-xl transition-all font-sans ${fontFamily === f.family ? 'bg-secondary text-white shadow-lg' : 'hover:bg-foreground/5 text-foreground/40 hover:text-foreground border border-transparent'}`}
                                                     >
                                                         {f.name}
                                                     </button>
@@ -300,10 +300,10 @@ export default function Reader() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="bg-white/5 p-3 flex justify-center border-t border-white/5">
+                                    <div className="bg-foreground/2 p-3 flex justify-center border-t border-[var(--border)]">
                                         <button
                                             onClick={() => setShowSettings(false)}
-                                            className="text-[10px] font-bold text-primary uppercase tracking-widest hover:text-white transition-colors"
+                                            className="text-[10px] font-bold text-secondary uppercase tracking-[0.2em] hover:opacity-80 transition-opacity font-sans py-2"
                                         >
                                             Tamam
                                         </button>
@@ -315,14 +315,14 @@ export default function Reader() {
 
                     <div className="w-10 flex justify-center">
                         {isPageRead && (
-                            <CheckCircle2 className="w-6 h-6 text-green-500" />
+                            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                         )}
                     </div>
                 </div>
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto bg-[#F4EBD0] dark:bg-[#0a0a09] p-2 sm:p-4">
+            <div className="flex-1 overflow-y-auto bg-background p-2 sm:p-4 perspective-1000">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={`${readingMode}-${readingMode === 'monthly' ? currentJuzIndex : currentPage}`}
@@ -338,11 +338,11 @@ export default function Reader() {
             </div>
 
             {/* Sticky Interaction Area */}
-            <div className="glass-card border-t border-white/5 p-4 sm:p-6 flex items-center justify-between gap-4 safe-bottom reader-footer">
+            <div className="glass-card border-t border-[var(--border)] p-4 sm:p-6 flex items-center justify-between gap-4 safe-bottom reader-footer bg-card/80 backdrop-blur-xl">
                 <button
                     onClick={handlePrev}
                     disabled={readingMode === 'monthly' ? currentJuzIndex === 1 : currentPage === 1}
-                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-white transition-all disabled:opacity-20 border border-white/5"
+                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-foreground/5 hover:bg-foreground/10 rounded-2xl text-foreground transition-all disabled:opacity-20 border border-[var(--border)] font-sans"
                 >
                     <ChevronLeft className="w-5 h-5" />
                     {readingMode === 'monthly' ? "Önceki Cüz" : "Önceki Sayfa"}
@@ -350,7 +350,7 @@ export default function Reader() {
 
                 <button
                     onClick={handleNext}
-                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary hover:bg-primary/90 rounded-2xl text-white font-bold shadow-lg shadow-primary/20 transition-all border border-primary/20"
+                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-secondary hover:opacity-90 rounded-2xl text-white font-bold shadow-lg shadow-secondary/20 transition-all font-sans"
                 >
                     {readingMode === 'monthly'
                         ? (currentJuzIndex === 30 ? "Ayı Tamamla" : "Okundu / Sonraki Cüz")
