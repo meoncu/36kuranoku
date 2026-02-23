@@ -88,39 +88,39 @@ export default function History() {
                                 key={juz.id}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="glass-card p-6 rounded-[32px] border-[var(--border)] relative overflow-hidden group"
+                                className="glass-card p-4 sm:p-6 rounded-[32px] border-[var(--border)] relative overflow-hidden group"
                             >
                                 {/* Progress Background */}
                                 <div className="absolute inset-y-0 left-0 bg-green-500/[0.03] w-full" />
 
                                 <div className="relative z-10">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-600">
-                                                <CheckCircle2 className="w-6 h-6" />
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-600 shrink-0">
+                                                <CheckCircle2 className="w-5 h-5" />
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold text-lg text-foreground">{juz.title || `${juz.juzNo}. Cüz`}</h3>
-                                                <div className="flex items-center gap-2 text-[10px] font-bold text-foreground/30 uppercase tracking-widest font-sans">
+                                            <div className="min-w-0">
+                                                <h3 className="font-bold text-base text-foreground truncate">{juz.title || `${juz.juzNo}. Cüz`}</h3>
+                                                <div className="flex items-center gap-2 text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans">
                                                     <Clock className="w-3 h-3" />
                                                     {getDuration(juz.baslangicTarihi, juz.completedAt || juz.updatedAt)}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest font-sans mb-1">Bitiş Tarihi</div>
-                                            <div className="text-xs font-bold text-foreground/60">{formatDate(juz.completedAt || juz.updatedAt)}</div>
+                                        <div className="text-right shrink-0">
+                                            <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans mb-0.5">Bitiş</div>
+                                            <div className="text-[10px] font-bold text-foreground/60">{formatDate(juz.completedAt || juz.updatedAt)}</div>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4 py-4 border-y border-[var(--border)] my-4">
-                                        <div className="space-y-1">
-                                            <div className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest font-sans">Başlangıç</div>
-                                            <div className="text-xs font-bold text-foreground/60">{formatDate(juz.baslangicTarihi)}</div>
+                                    <div className="grid grid-cols-2 gap-4 py-3 border-y border-[var(--border)] my-3">
+                                        <div className="space-y-0.5">
+                                            <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans">Başlangıç</div>
+                                            <div className="text-[10px] font-bold text-foreground/60">{formatDate(juz.baslangicTarihi)}</div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <div className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest font-sans">İçerik</div>
-                                            <div className="text-xs font-bold text-foreground/60">
+                                        <div className="space-y-0.5">
+                                            <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans">İçerik</div>
+                                            <div className="text-[10px] font-bold text-foreground/60">
                                                 {juz.type === 'surah' ? 'Sure Takibi' : juz.type === 'custom' ? `${juz.toplamSayfa} Sayfa` : `${juz.juzNo}. Cüz`}
                                             </div>
                                         </div>

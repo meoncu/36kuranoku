@@ -123,7 +123,7 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
 
     return (
         <motion.div layout>
-            <Link to={`/juz/${juz.id}`} className={`glass-card p-6 rounded-[32px] block hover:bg-foreground/[0.02] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
+            <Link to={`/juz/${juz.id}`} className={`glass-card p-4 sm:p-5 rounded-[32px] block hover:bg-foreground/[0.02] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
                 <div
                     className={`absolute inset-y-0 left-0 bg-gradient-to-r transition-all duration-1000 border-r ${progress >= 100
                         ? 'from-green-500/10 to-green-500/25 dark:from-green-500/20 dark:to-green-500/40 border-green-500/20'
@@ -131,9 +131,9 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                         }`}
                     style={{ width: `${progress}%` }}
                 />
-                <div className="relative z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-2xl bg-foreground/5 grid place-items-center relative group/circle ${isChild ? 'scale-90' : ''}`}>
+                <div className="relative z-10 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-foreground/5 grid place-items-center relative group/circle shrink-0 ${isChild ? 'scale-90' : ''}`}>
                             <span className="font-bold text-xl text-foreground group-hover/circle:opacity-0 transition-opacity">
                                 {juz.type === 'surah' ? <BookOpen className="w-6 h-6" /> : juz.type === 'custom' ? <TrendingUp className="w-6 h-6" /> : juz.juzNo}
                             </span>
@@ -148,9 +148,9 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                             )}
                             {isCompleted && <div className="absolute inset-0 flex items-center justify-center text-green-500"><CheckCircle2 className="w-8 h-8" /></div>}
                         </div>
-                        <div className="space-y-0.5">
-                            <div className="flex items-center gap-3">
-                                <h3 className="font-bold text-lg text-foreground leading-tight">{juz.title || `${juz.juzNo}. Cüz`}</h3>
+                        <div className="space-y-0.5 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-bold text-base sm:text-lg text-foreground leading-tight truncate">{juz.title || `${juz.juzNo}. Cüz`}</h3>
                                 {juz.hedefBitisTarihi && (
                                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-md">
                                         <Calendar className="w-3 h-3" />
@@ -270,26 +270,26 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
 
     return (
         <div className="space-y-2">
-            <motion.div layout onClick={() => setIsExpanded(!isExpanded)} className={`glass-card p-5 rounded-2xl flex items-center justify-between cursor-pointer border transition-all ${isExpanded ? 'border-secondary/50 bg-secondary/5' : 'border-[var(--border)] hover:border-foreground/10'}`}>
-                <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner transition-colors ${progress === 100 ? 'bg-green-500/20 text-green-500' : 'bg-secondary/20 text-secondary'}`}>{isExpanded ? <FolderOpen className="w-6 h-6" /> : <Folder className="w-6 h-6" />}</div>
-                    <div>
-                        <h3 className="font-bold text-lg text-foreground group-hover:text-secondary transition-colors">{title}</h3>
-                        <p className="text-xs text-foreground/40 font-medium font-sans">{juzs.length} Parça • %{progress} Tamamlandı</p>
+            <motion.div layout onClick={() => setIsExpanded(!isExpanded)} className={`glass-card p-3.5 sm:p-5 rounded-2xl flex items-center justify-between cursor-pointer border transition-all ${isExpanded ? 'border-secondary/50 bg-secondary/5' : 'border-[var(--border)] hover:border-foreground/10'}`}>
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner transition-colors shrink-0 ${progress === 100 ? 'bg-green-500/20 text-green-500' : 'bg-secondary/20 text-secondary'}`}>{isExpanded ? <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6" /> : <Folder className="w-5 h-5 sm:w-6 sm:h-6" />}</div>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-base sm:text-lg text-foreground group-hover:text-secondary transition-colors truncate">{title}</h3>
+                        <p className="text-[10px] sm:text-xs text-foreground/40 font-medium font-sans truncate">{juzs.length} Parça • %{progress} Tamamlandı</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }}
-                            className="flex items-center gap-2 bg-secondary text-white px-3 py-2 rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-lg shadow-secondary/20 active:scale-95 z-20 font-sans"
+                            className="flex items-center gap-1.5 bg-secondary text-white px-2.5 py-1.5 rounded-xl text-[10px] font-bold hover:opacity-90 transition-all shadow-lg shadow-secondary/20 active:scale-95 z-20 font-sans shrink-0"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-3 h-3" />
                             <span className="hidden min-[380px]:inline">Ekle</span>
                         </button>
-                        <div className="text-right hidden sm:block font-sans">
-                            <span className="text-xs text-foreground/30 font-bold block leading-none">{readPages} / {totalPages} Sayfa</span>
-                            <div className="w-24 h-1.5 bg-foreground/[0.08] dark:bg-foreground/5 rounded-full mt-1.5 overflow-hidden"><div className="h-full bg-secondary" style={{ width: `${progress}%` }} /></div>
+                        <div className="text-right hidden md:block font-sans shrink-0">
+                            <span className="text-[10px] text-foreground/30 font-bold block leading-none">{readPages} / {totalPages} P</span>
+                            <div className="w-16 h-1 bg-foreground/[0.08] dark:bg-foreground/5 rounded-full mt-1 overflow-hidden inline-block"><div className="h-full bg-secondary" style={{ width: `${progress}%` }} /></div>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -598,7 +598,7 @@ export default function Dashboard() {
                 <button onClick={() => setShowModal(true)} className="flex items-center gap-2 text-secondary font-bold text-xs bg-secondary/10 px-3 py-1.5 rounded-lg hover:bg-secondary/20 transition-all"><Plus className="w-4 h-4" /> Yeni Ekle</button>
             </div>
 
-            <main className="space-y-4">
+            <main className="space-y-3">
                 {loading ? <div className="grid gap-4"><div className="glass-card h-32 rounded-3xl animate-pulse" /></div> :
                     juzler.length === 0 ? <div className="text-center py-16 glass-card rounded-[40px] border-[var(--border)]"><BookOpen className="w-16 h-16 text-foreground/5 mx-auto mb-6" /><h3 className="text-foreground/40 font-sans">Henüz cüz eklenmemiş</h3></div> :
                         <div className="grid gap-4">
