@@ -56,8 +56,8 @@ export default function Layout() {
                 </div>
             </header>
 
-            <main className="flex-1 overflow-auto">
-                <div className="max-w-4xl mx-auto p-4 pb-24">
+            <main className="flex-1 overflow-x-hidden">
+                <div className="max-w-4xl mx-auto p-4 pb-24 sm:px-4 px-2">
                     <Outlet />
                 </div>
             </main>

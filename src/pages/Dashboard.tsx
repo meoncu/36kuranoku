@@ -100,8 +100,8 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
             <motion.div layout>
                 <Link to={`/juz/monthly/${juz.id}`} className={`glass-card p-6 rounded-[32px] block hover:bg-foreground/[0.08] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
                     <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-secondary/10 to-secondary/30 transition-all duration-1000 border-r border-secondary/20" style={{ width: `${progressPercent}%` }} />
-                    <div className="absolute right-28 sm:right-44 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
-                        <span className="text-[32px] sm:text-5xl font-black text-foreground/10 tracking-tight">%{Math.round(progressPercent)}</span>
+                    <div className="absolute right-24 sm:right-36 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
+                        <span className="text-xl sm:text-3xl font-black text-foreground/10 tracking-tight">%{Math.round(progressPercent)}</span>
                     </div>
                     <div className="relative z-10 flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -134,8 +134,8 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                         }`}
                     style={{ width: `${progress}%` }}
                 />
-                <div className="absolute right-32 sm:right-48 top-1/2 -translate-y-1/2 z-0 pointer-events-none blur-[1.5px] opacity-60">
-                    <span className="text-3xl sm:text-4xl font-black text-foreground/20 dark:text-foreground/10 tracking-tighter">%{Math.round(progress)}</span>
+                <div className="absolute right-24 sm:right-36 top-1/2 -translate-y-1/2 z-0 pointer-events-none blur-[1px] opacity-40">
+                    <span className="text-lg sm:text-2xl font-black text-foreground/20 dark:text-foreground/10 tracking-tighter">%{Math.round(progress)}</span>
                 </div>
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -302,16 +302,16 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
                         {completedJuzNos.length > 0 && (
                             <button
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCompletedGrid(!showCompletedGrid); }}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-sm z-20 ${showCompletedGrid ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'}`}
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-sm z-20 ${showCompletedGrid ? 'bg-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'}`}
                                 title="Biten Cüzleri Göster"
                             >
-                                <CheckCircle2 className="w-4 h-4" />
+                                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                         )}
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }} className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary/50 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Plus className="w-4 h-4" /></button>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteGroup(title, juzs); }} className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"><Trash2 className="w-4 h-4" /></button>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }} className="w-8 h-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/40 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Edit2 className="w-4 h-4" /></button>
-                        <div className={`p-2 rounded-full transition-all ${isExpanded ? 'bg-foreground/10 rotate-180' : 'bg-foreground/5'}`}><ChevronDown className="w-5 h-5 text-foreground/40" /></div>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary/50 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteGroup(title, juzs); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"><Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/40 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
+                        <div className={`p-1.5 sm:p-2 rounded-full transition-all ${isExpanded ? 'bg-foreground/10 rotate-180' : 'bg-foreground/5'}`}><ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-foreground/40" /></div>
                     </div>
                 </div>
                 {isEditing && <EditGroupModal groupName={title} juzs={juzs} onClose={() => setIsEditing(false)} />}
@@ -374,7 +374,7 @@ export default function Dashboard() {
         day: 'numeric',
         month: 'long',
         year: 'numeric'
-    }).format(new Date()).replace(/Hicri /g, '');
+    }).format(new Date()).replace(/Hicri /g, '').replace(/MÖ /g, '').replace(/MÖ/g, '');
 
     useEffect(() => {
         if (!user) return;
@@ -498,24 +498,24 @@ export default function Dashboard() {
     const currentGlobalPage = (lastActiveJuz?.startPage || 1) + (lastReadPage - 1);
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 px-4">
+        <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 sm:px-4 px-0">
             <AnimatePresence>{showProfileModal && <ProfileModal user={user} profile={profile} onClose={() => setShowProfileModal(false)} />}</AnimatePresence>
 
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4">
-                    <div onClick={() => setShowProfileModal(true)} className="w-14 h-14 rounded-2xl bg-foreground/5 border border-[var(--border)] flex items-center justify-center text-foreground/50 hover:bg-foreground/10 hover:text-foreground transition-all cursor-pointer overflow-hidden group shadow-sm">
-                        {profile?.photoURL ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <User className="w-6 h-6" />}
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                    <div onClick={() => setShowProfileModal(true)} className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-foreground/5 border border-[var(--border)] flex items-center justify-center text-foreground/50 hover:bg-foreground/10 hover:text-foreground transition-all cursor-pointer overflow-hidden group shadow-sm shrink-0">
+                        {profile?.photoURL ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <User className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-black text-foreground tracking-tight leading-none mb-1.5">{hicriTarih}</h1>
-                        <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-foreground/40 font-sans">
-                            <div className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-secondary" /> {stats.completedCount} BİTTİ</div>
-                            <div className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-secondary" /> {stats.totalRead} SAYFA</div>
-                            <div className="flex items-center gap-1"><TrendingUp className="w-3 h-3 text-secondary" /> {stats.activeCount} AKTİF</div>
+                    <div className="min-w-0">
+                        <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tight leading-none mb-1.5 truncate">{hicriTarih}</h1>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-foreground/40 font-sans">
+                            <div className="flex items-center gap-1 shrink-0"><CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" /> {stats.completedCount} BİTTİ</div>
+                            <div className="flex items-center gap-1 shrink-0"><BookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" /> {stats.totalRead} SAYFA</div>
+                            <div className="flex items-center gap-1 shrink-0"><TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" /> {stats.activeCount} AKTİF</div>
                         </div>
                     </div>
                 </div>
-                <button onClick={() => setShowProfileModal(true)} className="p-3 bg-foreground/5 hover:bg-foreground/10 rounded-2xl text-foreground/40 hover:text-foreground transition-all border border-[var(--border)] group shadow-sm"><Settings className="w-5 h-5 group-hover:rotate-45 transition-transform" /></button>
+                <button onClick={() => setShowProfileModal(true)} className="p-2.5 sm:p-3 bg-foreground/5 hover:bg-foreground/10 rounded-2xl text-foreground/40 hover:text-foreground transition-all border border-[var(--border)] group shadow-sm ml-2 shrink-0"><Settings className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-45 transition-transform" /></button>
             </div>
 
             {profile?.showInstallBanner !== false && <InstallPWA />}
