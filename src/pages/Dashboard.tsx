@@ -123,7 +123,7 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
 
     return (
         <motion.div layout>
-            <Link to={`/juz/${juz.id}`} className={`glass-card p-4 sm:p-5 rounded-[32px] block hover:bg-foreground/[0.02] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
+            <Link to={`/juz/${juz.id}`} className={`glass-card p-3 sm:p-5 rounded-[32px] block hover:bg-foreground/[0.02] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
                 <div
                     className={`absolute inset-y-0 left-0 bg-gradient-to-r transition-all duration-1000 border-r ${progress >= 100
                         ? 'from-green-500/10 to-green-500/25 dark:from-green-500/20 dark:to-green-500/40 border-green-500/20'
@@ -131,9 +131,9 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                         }`}
                     style={{ width: `${progress}%` }}
                 />
-                <div className="relative z-10 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-foreground/5 grid place-items-center relative group/circle shrink-0 ${isChild ? 'scale-90' : ''}`}>
+                <div className="relative z-10 flex items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-2xl bg-foreground/5 grid place-items-center relative group/circle shrink-0 ${isChild ? 'scale-90' : ''}`}>
                             <span className="font-bold text-xl text-foreground group-hover/circle:opacity-0 transition-opacity">
                                 {juz.type === 'surah' ? <BookOpen className="w-6 h-6" /> : juz.type === 'custom' ? <TrendingUp className="w-6 h-6" /> : juz.juzNo}
                             </span>
@@ -190,12 +190,12 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-3 sm:px-6 pb-4 sm:pb-6 pt-2 bg-foreground/[0.03] border-t border-[var(--border)] space-y-3">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">Hızlı Okuma Takibi</span>
-                                <span className="text-[10px] font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-2 py-0.5 rounded-md">Sayfa {juz.okunanSayfalar.length}/{juz.toplamSayfa}</span>
+                        <div className="px-2 sm:px-6 pb-4 sm:pb-6 pt-2 bg-foreground/[0.03] border-t border-[var(--border)] space-y-3">
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="text-[9px] sm:text-[10px] font-bold text-foreground/40 uppercase tracking-widest">Hızlı Takip</span>
+                                <span className="text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-2 py-0.5 rounded-md">S. {juz.okunanSayfalar.length}/{juz.toplamSayfa}</span>
                             </div>
-                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 sm:gap-2">
+                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2">
                                 {Array.from({ length: juz.toplamSayfa || 20 }, (_, i) => i + 1).map(page => {
                                     const isRead = juz.okunanSayfalar.includes(page);
                                     return (
@@ -270,12 +270,12 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
 
     return (
         <div className="space-y-2">
-            <motion.div layout onClick={() => setIsExpanded(!isExpanded)} className={`glass-card p-3.5 sm:p-5 rounded-2xl flex items-center justify-between cursor-pointer border transition-all ${isExpanded ? 'border-secondary/50 bg-secondary/5' : 'border-[var(--border)] hover:border-foreground/10'}`}>
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+            <motion.div layout onClick={() => setIsExpanded(!isExpanded)} className={`glass-card p-3 sm:p-5 rounded-2xl flex items-center justify-between cursor-pointer border transition-all ${isExpanded ? 'border-secondary/50 bg-secondary/5' : 'border-[var(--border)] hover:border-foreground/10'}`}>
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner transition-colors shrink-0 ${progress === 100 ? 'bg-green-500/20 text-green-500' : 'bg-secondary/20 text-secondary'}`}>{isExpanded ? <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6" /> : <Folder className="w-5 h-5 sm:w-6 sm:h-6" />}</div>
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-base sm:text-lg text-foreground group-hover:text-secondary transition-colors truncate">{title}</h3>
-                        <p className="text-[10px] sm:text-xs text-foreground/40 font-medium font-sans truncate">{juzs.length} Parça • %{progress} Tamamlandı</p>
+                        <h3 className="font-bold text-sm sm:text-lg text-foreground group-hover:text-secondary transition-colors truncate">{title}</h3>
+                        <p className="text-[9px] sm:text-xs text-foreground/40 font-medium font-sans truncate">{juzs.length} Parça • %{progress}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -343,7 +343,7 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
             </AnimatePresence>
             <AnimatePresence>
                 {isExpanded && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-3 pl-3 sm:pl-4 border-l border-[var(--border)] ml-2 sm:ml-6 py-2">
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-2.5 pl-2.5 sm:pl-4 border-l border-[var(--border)] ml-0 sm:ml-6 py-2">
                         {sortedJuzs.map(juz => <JuzCard key={juz.id} juz={juz} isChild onDelete={onDeleteJuz} onComplete={onCompleteJuz} onEdit={onEditJuz} onArchive={onArchiveJuz} onTogglePage={onTogglePage} />)}
                     </motion.div>
                 )}
@@ -509,7 +509,7 @@ export default function Dashboard() {
     const currentGlobalPage = (lastActiveJuz?.startPage || 1) + (lastReadPage - 1);
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 sm:px-4 px-0">
+        <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 sm:px-4 px-2">
             <AnimatePresence>{showProfileModal && <ProfileModal user={user} profile={profile} onClose={() => setShowProfileModal(false)} />}</AnimatePresence>
 
             <div className="flex items-center justify-between mb-2">
