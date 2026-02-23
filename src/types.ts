@@ -25,6 +25,10 @@ export interface Juz {
     // Grouping Fields
     isGrouped?: boolean;
     groupName?: string | null;
+
+    // Completion Fields
+    completedAt?: any; // Timestamp
+    isDuaRead?: boolean;
 }
 
 export interface UserProfile {

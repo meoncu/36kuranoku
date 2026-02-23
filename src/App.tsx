@@ -10,6 +10,7 @@ import Bookmarks from './pages/Bookmarks';
 import MonthlyTracker from './pages/MonthlyTracker';
 import AdminDashboard from './pages/AdminDashboard';
 import PendingApproval from './pages/PendingApproval';
+import History from './pages/History';
 import Layout from './components/Layout';
 import { useMushafSettings } from './hooks/useMushafSettings';
 
@@ -55,6 +56,7 @@ function App() {
                     <Route path="/juzs" element={<JuzIndex />} />
                     <Route path="/juz/monthly/:id" element={<MonthlyTracker />} />
                     <Route path="/bookmarks" element={<Bookmarks />} />
+                    <Route path="/history" element={<History />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                 </Route>
             </Routes>

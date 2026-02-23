@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp, where, getDocs, addDoc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
 import { Juz } from '../types';
-import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive, Trash2, Folder, FolderOpen, ChevronDown, Settings, LayoutGrid } from 'lucide-react';
+import { Plus, BookOpen, Clock, ChevronRight, CheckCircle2, TrendingUp, X, Search, Calendar, AlertTriangle, User, StickyNote, Edit2, Archive, Trash2, Folder, FolderOpen, ChevronDown, Settings, LayoutGrid, Heart } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AddJuzModal from '../components/AddJuzModal';
 import EditJuzModal from '../components/EditJuzModal';
@@ -429,7 +429,13 @@ export default function Dashboard() {
         if (!user) return;
         if (window.confirm('Bu takibi tamamladınız mı? Onaylarsanız arşive kaldırılacaktır.')) {
             try {
-                await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), { isArchived: true, durum: 'tamamlandi', updatedAt: serverTimestamp() });
+                await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), {
+                    isArchived: true,
+                    durum: 'tamamlandi',
+                    updatedAt: serverTimestamp(),
+                    completedAt: serverTimestamp(),
+                    isDuaRead: false
+                });
             } catch (error) { alert("Hata oluştu."); }
         }
     };
@@ -458,7 +464,13 @@ export default function Dashboard() {
         if (window.confirm(`${juz.title || juz.juzNo + '. Cüz'} tamamlandı olarak işaretlensin mi?`)) {
             try {
                 const allPages = Array.from({ length: juz.toplamSayfa || 20 }, (_, i) => i + 1);
-                await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), { okunanSayfalar: allPages, durum: 'tamamlandi', updatedAt: serverTimestamp() });
+                await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), {
+                    okunanSayfalar: allPages,
+                    durum: 'tamamlandi',
+                    updatedAt: serverTimestamp(),
+                    completedAt: serverTimestamp(),
+                    isDuaRead: false
+                });
             } catch (error) { alert("Hata oluştu."); }
         }
     };
@@ -480,9 +492,14 @@ export default function Dashboard() {
 
     const stats = {
         totalRead: juzler.reduce((acc, curr) => acc + curr.okunanSayfalar.length, 0),
-        completedCount: juzler.filter(j => j.okunanSayfalar.length >= j.toplamSayfa).length,
-        activeCount: juzler.filter(j => j.okunanSayfalar.length < j.toplamSayfa).length
+        completedCount: juzler.filter(j => j.okunanSayfalar.length >= (j.toplamSayfa || 20)).length,
+        activeCount: juzler.filter(j => j.okunanSayfalar.length < (j.toplamSayfa || 20)).length
     };
+
+    const itemsNeedingDua = juzler.filter(j =>
+        (j.okunanSayfalar.length >= (j.toplamSayfa || 20) || j.durum === 'tamamlandi') &&
+        j.isDuaRead === false
+    );
 
     const lastActiveJuz = juzler
         .filter(j => j.durum === 'devam-ediyor' && j.type !== 'monthly_page')
@@ -514,6 +531,33 @@ export default function Dashboard() {
 
             {profile?.showInstallBanner !== false && <InstallPWA />}
             {profile?.showPrayerTimes !== false && <PrayerTimes city={profile?.city || 'Ankara'} />}
+
+            <AnimatePresence>
+                {itemsNeedingDua.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="overflow-hidden"
+                    >
+                        <Link to="/history" className="glass-card mb-4 p-5 rounded-[32px] border-2 border-amber-500/30 bg-amber-500/5 flex items-center justify-between group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-600 animate-pulse">
+                                    <Heart className="w-6 h-6 fill-current" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-base text-foreground leading-tight">Hatim Duası Bekliyor</h3>
+                                    <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-widest mt-0.5">
+                                        {itemsNeedingDua.length} adet tamamlanmış takibiniz için dua okunması gerekiyor
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-amber-500/10 grid place-items-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                                <ChevronRight className="w-5 h-5" />
+                            </div>
+                        </Link>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <AnimatePresence>
                 {showPageModal && (
@@ -577,6 +621,7 @@ export default function Dashboard() {
                 <Link to="/surahs" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 transition-all h-40 text-center"><svg className="w-8 h-8 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L4 7v13h16V7l-8-5z" /><path d="M10 20v-6h4v6" /></svg><span className="text-foreground font-medium text-sm">Sure İndeksi</span></Link>
                 <button onClick={() => setShowPageModal(true)} className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 h-40 text-foreground font-medium text-sm transition-all"><Search className="w-8 h-8 text-secondary" />Sayfaya Git</button>
                 <Link to="/bookmarks" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 h-40 transition-all"><div className="w-8 h-8 text-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg></div><span className="text-foreground font-medium text-sm">Yer İmleri</span></Link>
+                <Link to="/history" className="glass-card p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-foreground/5 h-40 transition-all"><div className="w-8 h-8 text-secondary"><CheckCircle2 className="w-8 h-8" /></div><span className="text-foreground font-medium text-sm">Geçmiş & İcmal</span></Link>
             </div>
         </div>
     );
