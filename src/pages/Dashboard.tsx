@@ -100,9 +100,6 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
             <motion.div layout>
                 <Link to={`/juz/monthly/${juz.id}`} className={`glass-card p-6 rounded-[32px] block hover:bg-foreground/[0.08] transition-all group border-[var(--border)] relative overflow-hidden ${isChild ? 'bg-foreground/5' : ''}`}>
                     <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-secondary/10 to-secondary/30 transition-all duration-1000 border-r border-secondary/20" style={{ width: `${progressPercent}%` }} />
-                    <div className="absolute right-24 sm:right-36 top-1/2 -translate-y-1/2 z-0 pointer-events-none">
-                        <span className="text-xl sm:text-3xl font-black text-foreground/10 tracking-tight">%{Math.round(progressPercent)}</span>
-                    </div>
                     <div className="relative z-10 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-secondary/20 flex items-center justify-center text-secondary"><Calendar className="w-6 h-6" /></div>
@@ -134,9 +131,6 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                         }`}
                     style={{ width: `${progress}%` }}
                 />
-                <div className="absolute right-24 sm:right-36 top-1/2 -translate-y-1/2 z-0 pointer-events-none blur-[1px] opacity-40">
-                    <span className="text-lg sm:text-2xl font-black text-foreground/20 dark:text-foreground/10 tracking-tighter">%{Math.round(progress)}</span>
-                </div>
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className={`w-14 h-14 rounded-2xl bg-foreground/5 grid place-items-center relative group/circle ${isChild ? 'scale-90' : ''}`}>
