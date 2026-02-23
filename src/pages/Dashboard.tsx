@@ -190,12 +190,12 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-6 pb-6 pt-2 bg-foreground/[0.03] border-t border-[var(--border)] space-y-3">
+                        <div className="px-3 sm:px-6 pb-4 sm:pb-6 pt-2 bg-foreground/[0.03] border-t border-[var(--border)] space-y-3">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">Hızlı Okuma Takibi</span>
                                 <span className="text-[10px] font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-2 py-0.5 rounded-md">Sayfa {juz.okunanSayfalar.length}/{juz.toplamSayfa}</span>
                             </div>
-                            <div className="grid grid-cols-5 min-[400px]:grid-cols-10 gap-2">
+                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 sm:gap-2">
                                 {Array.from({ length: juz.toplamSayfa || 20 }, (_, i) => i + 1).map(page => {
                                     const isRead = juz.okunanSayfalar.includes(page);
                                     return (
@@ -343,7 +343,7 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
             </AnimatePresence>
             <AnimatePresence>
                 {isExpanded && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pl-4 border-l-2 border-[var(--border)] ml-6 py-2">
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-3 pl-3 sm:pl-4 border-l border-[var(--border)] ml-2 sm:ml-6 py-2">
                         {sortedJuzs.map(juz => <JuzCard key={juz.id} juz={juz} isChild onDelete={onDeleteJuz} onComplete={onCompleteJuz} onEdit={onEditJuz} onArchive={onArchiveJuz} onTogglePage={onTogglePage} />)}
                     </motion.div>
                 )}
