@@ -364,11 +364,20 @@ export default function Dashboard() {
     const [editingJuz, setEditingJuz] = useState<Juz | null>(null);
     const [targetPage, setTargetPage] = useState('');
 
-    const hicriTarih = new Intl.DateTimeFormat('tr-TR-u-ca-islamic', {
+    const hicriAylar = [
+        'Muharrem', 'Safer', 'Rebîülevvel', 'Rebîülâhir',
+        'Cemâziyelevvel', 'Cemâziyelâhir', 'Receb', 'Şaban',
+        'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce'
+    ];
+    const hicriParts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
         day: 'numeric',
-        month: 'long',
+        month: 'numeric',
         year: 'numeric'
-    }).format(new Date()).replace(/Hicri /g, '').replace(/MÖ /g, '').replace(/MÖ/g, '');
+    }).format(new Date()).split('/');
+    const hicriGun = hicriParts[1];
+    const hicriAy = hicriAylar[parseInt(hicriParts[0]) - 1] || hicriParts[0];
+    const hicriYil = hicriParts[2]?.replace(/\s*AH/g, '').trim();
+    const hicriTarih = `${hicriGun} ${hicriAy} ${hicriYil}`;
 
     useEffect(() => {
         if (!user) return;
