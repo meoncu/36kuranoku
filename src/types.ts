@@ -11,7 +11,7 @@ export interface Juz {
     assignedBy?: string; // Who assigned this task (e.g. "Ahmet", "Hat m Grubu")
     notes?: string; // User notes
     title?: string; // Custom title for the tracker (e.g. "Ramazan Hatmi")
-    type?: 'juz' | 'surah' | 'monthly_page' | 'custom'; // Tracker type
+    type?: 'juz' | 'surah' | 'monthly_page' | 'custom' | 'hijri_plan'; // Tracker type
     surahId?: number; // If type is surah
     startPage?: number; // Starting page of the range
     endPage?: number; // Ending page of the range
@@ -21,6 +21,13 @@ export interface Juz {
     startMonth?: string; // YYYY-MM starting period
     monthlyProgress?: Record<string, number[]>; // Key: "YYYY-MM", Value: Array of completed Juz numbers (1-30)
     isSingleMonth?: boolean; // Manual Single Month Tracker
+
+    // For Hijri Planning
+    hijriPlanConfig?: {
+        startHijriDate: string; // e.g. "1445-08-10"
+        startJuz: number; // 1-30
+        dailyJuzCount: number; // default 1
+    };
 
     // Grouping Fields
     isGrouped?: boolean;

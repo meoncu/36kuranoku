@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { X, Search } from 'lucide-react';
 import { CHAPTERS } from '../constants/chapters';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getHijriDate } from '../utils/hijri';
 
 interface AddJuzModalProps {
     onClose: () => void;
@@ -15,15 +16,28 @@ interface AddJuzModalProps {
 
 export default function AddJuzModal({ onClose, initialGroupName = '', existingJuzs = [] }: AddJuzModalProps) {
     const { user } = useAuth();
-    const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page' | 'custom'>('juz');
+    const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page' | 'custom' | 'hijri_plan'>('juz');
     const [selectedJuzs, setSelectedJuzs] = useState<number[]>(() => {
         if (existingJuzs.length > 0) {
-            // Find the first missing juz and suggest it
+            // Find the maximum existing juz number
+            const maxJuz = Math.max(...existingJuzs);
+            // Suggest the next one if it's within range 1-30
+            if (maxJuz < 30 && !existingJuzs.includes(maxJuz + 1)) {
+                return [maxJuz + 1];
+            }
+            // Otherwise find the first missing one
             for (let i = 1; i <= 30; i++) {
                 if (!existingJuzs.includes(i)) return [i];
             }
         }
-        return [1];
+        return []; // Default to empty instead of [1]
+    });
+    const [startJuz, setStartJuz] = useState(() => {
+        if (existingJuzs.length > 0) {
+            const maxJuz = Math.max(...existingJuzs);
+            return maxJuz < 30 ? maxJuz + 1 : 1;
+        }
+        return 1;
     });
     const [selectedSurahId, setSelectedSurahId] = useState(0);
     const [startPageCustom, setStartPageCustom] = useState(1);
@@ -37,6 +51,9 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
     const [startMonth, setStartMonth] = useState(() => {
         const now = new Date();
         return `${now.getFullYear()}-01`;
+    });
+    const [startDate, setStartDate] = useState(() => {
+        return new Date().toISOString().split('T')[0];
     });
 
     const [title, setTitle] = useState('');
@@ -204,6 +221,35 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
                     groupName: groupName.trim() || null,
                     isGrouped: !!groupName.trim()
                 }));
+            } else if (selectionType === 'hijri_plan') {
+                const [y, m, d] = startDate.split('-').map(Number);
+                const localDate = new Date(y, m - 1, d);
+                const hDate = getHijriDate(localDate);
+                let finalTitle = title || `Hicri Hatim Planı`;
+
+                promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
+                    type: 'hijri_plan',
+                    juzNo: startJuz,
+                    surahId: 0,
+                    title: finalTitle,
+                    toplamSayfa: 30, // Full hatim plan
+                    startPage: 0,
+                    endPage: 0,
+                    baslangicTarihi: localDate,
+                    hedefBitisTarihi: targetDate ? new Date(targetDate) : null,
+                    okunanSayfalar: [],
+                    durum: 'devam-ediyor',
+                    assignedBy: assignedBy,
+                    notes: notes,
+                    createdAt: serverTimestamp(),
+                    hijriPlanConfig: {
+                        startHijriDate: `${hDate.year}-${hDate.monthName}-${hDate.day}`, // For display
+                        startJuz: startJuz,
+                        dailyJuzCount: 1
+                    },
+                    groupName: groupName.trim() || null,
+                    isGrouped: !!groupName.trim()
+                }));
             }
 
             await Promise.all(promises);
@@ -229,6 +275,7 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
         }
         if (selectionType === 'custom') return 'Özel Plan İsmi';
         if (selectionType === 'surah') return 'Sure Seçiniz';
+        if (selectionType === 'hijri_plan') return 'Hicri Hatim Planı';
         return `Aylık Takip (${assignedPage}. Sayfa)`;
     };
 
@@ -259,6 +306,7 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
                         <button onClick={() => setSelectionType('surah')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'surah' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Sure</button>
                         <button onClick={() => setSelectionType('custom')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'custom' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Özel</button>
                         <button onClick={() => setSelectionType('monthly_page')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'monthly_page' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Aylık</button>
+                        <button onClick={() => setSelectionType('hijri_plan')} className={`flex-1 min-w-[60px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'hijri_plan' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Hicri Plan</button>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -396,6 +444,45 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
                                         onChange={(e) => setAssignedPage(Number(e.target.value))}
                                         className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary"
                                     />
+                                </div>
+                            </div>
+                        )}
+
+                        {selectionType === 'hijri_plan' && (
+                            <div className="space-y-4 font-sans border border-secondary/20 bg-secondary/5 p-4 rounded-2xl">
+                                <div>
+                                    <label className="text-xs font-bold text-secondary mb-1 block uppercase tracking-widest">Başlangıç Tarihi</label>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="w-full bg-background border border-[var(--border)] rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:border-secondary transition-all"
+                                    />
+                                    <p className="text-[10px] text-secondary/60 mt-1 font-bold">
+                                        Hicri: {(() => {
+                                            const [y, m, d] = startDate.split('-').map(Number);
+                                            return getHijriDate(new Date(y, m - 1, d)).full;
+                                        })()}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-bold text-secondary mb-1 block uppercase tracking-widest">Hangi Cüzle Başlıyorsun?</label>
+                                    <div className="grid grid-cols-6 gap-1 bg-background/50 p-2 rounded-xl border border-[var(--border)]">
+                                        {Array.from({ length: 30 }, (_, i) => i + 1).map(jNo => (
+                                            <button
+                                                key={jNo}
+                                                type="button"
+                                                onClick={() => setStartJuz(jNo)}
+                                                className={`aspect-square rounded-lg flex items-center justify-center text-[10px] font-bold transition-all
+                                                    ${startJuz === jNo ? 'bg-secondary text-white shadow-lg scale-110' : 'bg-foreground/5 text-foreground/40 hover:bg-foreground/10'}`}
+                                            >
+                                                {jNo}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-foreground/40 mt-2 italic">
+                                        Her gün 1 cüz okunacak şekilde planlanacaktır.
+                                    </p>
                                 </div>
                             </div>
                         )}

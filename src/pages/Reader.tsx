@@ -120,28 +120,40 @@ export default function Reader() {
     }, [user, id, searchParams]);
 
     const markAsRead = async () => {
-        if (!user || !juz || isReadOnly || !firestoreDocId) return;
+        const planId = searchParams.get('planId');
+        if (!user || !juz || (isReadOnly && !planId) || !firestoreDocId && !planId) return;
 
         try {
             if (readingMode === 'monthly') {
+                // ... (existing monthly logic)
                 const now = new Date();
                 const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-                // For monthly, we toggle the JUZ INDEX in the monthlyProgress array
-                // We check if it's already there to avoid duplicates, although arrayUnion handles uniqueness
-                await updateDoc(doc(db, 'users', user.uid, 'juzler', firestoreDocId), {
+                await updateDoc(doc(db, 'users', user.uid, 'juzler', firestoreDocId!), {
                     [`monthlyProgress.${currentKey}`]: arrayUnion(currentJuzIndex),
                     updatedAt: serverTimestamp()
                 });
             } else {
                 // Normal Mode
                 if (juz.okunanSayfalar.includes(currentPage)) return;
-                const isFinished = juz.okunanSayfalar.length + 1 >= juz.toplamSayfa;
-                await updateDoc(doc(db, 'users', user.uid, 'juzler', firestoreDocId), {
-                    okunanSayfalar: arrayUnion(currentPage),
-                    durum: isFinished ? 'tamamlandi' : 'devam-ediyor',
-                    updatedAt: serverTimestamp()
-                });
+                const isFinished = juz.okunanSayfalar.length + 1 >= (juz.toplamSayfa || 20);
+
+                if (firestoreDocId && !isReadOnly) {
+                    await updateDoc(doc(db, 'users', user.uid, 'juzler', firestoreDocId), {
+                        okunanSayfalar: arrayUnion(currentPage),
+                        durum: isFinished ? 'tamamlandi' : 'devam-ediyor',
+                        isArchived: isFinished ? true : false,
+                        completedAt: isFinished ? serverTimestamp() : null,
+                        updatedAt: serverTimestamp()
+                    });
+                }
+
+                // If this is part of a Hijri Plan, mark the juz as read in the plan too
+                if (planId && isFinished) {
+                    await updateDoc(doc(db, 'users', user.uid, 'juzler', planId), {
+                        okunanSayfalar: arrayUnion(juz.juzNo),
+                        updatedAt: serverTimestamp()
+                    });
+                }
             }
         } catch (error) {
             console.error("Error updating progress:", error);
