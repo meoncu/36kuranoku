@@ -17,7 +17,7 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
     const { user } = useAuth();
 
     // Initialize selection state based on existing juz data
-    const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page' | 'custom'>(juz.type || (juz.surahId ? 'surah' : 'juz'));
+    const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page' | 'custom' | 'hijri_plan'>(juz.type || (juz.surahId ? 'surah' : 'juz'));
     const [juzNo, setJuzNo] = useState(juz.juzNo || 1);
     const [selectedSurahId, setSelectedSurahId] = useState(juz.surahId || 0);
     const [startPageCustom, setStartPageCustom] = useState(juz.startPage || 1);
@@ -28,6 +28,10 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
     const [assignedPage, setAssignedPage] = useState(juz.assignedPage || 1);
     const [startMonth, setStartMonth] = useState(juz.startMonth || '');
     const [groupName, setGroupName] = useState(juz.groupName || '');
+
+    // For Hijri Planning
+    const [startHijriDate, setStartHijriDate] = useState(juz.hijriPlanConfig?.startHijriDate || '');
+    const [startJuzPlan, setStartJuzPlan] = useState(juz.hijriPlanConfig?.startJuz || 1);
 
     const [title, setTitle] = useState(juz.title || '');
     const [assignedBy, setAssignedBy] = useState(juz.assignedBy || '');
@@ -92,6 +96,9 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                 endPage = endPageCustom;
                 totalPages = (endPage - startPage) + 1;
                 if (!title) finalTitle = `${startPage}-${endPage}. Sayfalar`;
+            } else if (selectionType === 'hijri_plan') {
+                totalPages = 30; // Hatim is 30 juz
+                if (!title) finalTitle = `Hicri Hatim Planı`;
             } else {
                 if (juzNo === 1) startPage = 1;
                 if (!title || title.includes('Cüz') || title.includes('Suresi')) {
@@ -126,6 +133,13 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
             if (selectionType === 'monthly_page') {
                 updateData.assignedPage = assignedPage;
                 updateData.startMonth = startMonth;
+            } else if (selectionType === 'hijri_plan') {
+                updateData.hijriPlanConfig = {
+                    startHijriDate,
+                    startJuz: startJuzPlan,
+                    dailyJuzCount: juz.hijriPlanConfig?.dailyJuzCount || 1
+                };
+                updateData.baslangicTarihi = new Date(targetDate);
             }
 
             await updateDoc(doc(db, 'users', user.uid, 'juzler', juz.id), updateData);
@@ -160,11 +174,12 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
 
                     <h2 className="text-xl font-bold text-foreground mb-6 font-sans">Takibi Düzenle</h2>
 
-                    <div className="flex bg-foreground/5 p-1 rounded-[16px] mb-6 border border-[var(--border)] font-sans">
-                        <button onClick={() => setSelectionType('juz')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'juz' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Cüz</button>
-                        <button onClick={() => setSelectionType('surah')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'surah' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Sure</button>
-                        <button onClick={() => setSelectionType('custom')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'custom' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Özel</button>
-                        <button onClick={() => setSelectionType('monthly_page')} className={`flex-1 py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'monthly_page' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Aylık</button>
+                    <div className="flex bg-foreground/5 p-1 rounded-[16px] mb-6 border border-[var(--border)] font-sans overflow-x-auto gap-1">
+                        <button type="button" onClick={() => setSelectionType('juz')} className={`flex-1 min-w-[50px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'juz' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Cüz</button>
+                        <button type="button" onClick={() => setSelectionType('surah')} className={`flex-1 min-w-[50px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'surah' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Sure</button>
+                        <button type="button" onClick={() => setSelectionType('custom')} className={`flex-1 min-w-[50px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'custom' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Özel</button>
+                        <button type="button" onClick={() => setSelectionType('monthly_page')} className={`flex-1 min-w-[50px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'monthly_page' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Aylık</button>
+                        <button type="button" onClick={() => setSelectionType('hijri_plan')} className={`flex-1 min-w-[50px] py-2 text-[10px] font-bold rounded-xl transition-all ${selectionType === 'hijri_plan' ? 'bg-secondary text-white shadow-lg' : 'text-foreground/40 hover:text-foreground'}`}>Hicri</button>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -265,6 +280,32 @@ export default function EditJuzModal({ juz, onClose }: EditJuzModalProps) {
                                         value={startMonth}
                                         onChange={(e) => setStartMonth(e.target.value)}
                                         className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {selectionType === 'hijri_plan' && (
+                            <div className="space-y-4 font-sans">
+                                <div>
+                                    <label className="text-sm text-foreground/50 mb-1 block">Başlangıç Cüzü (1-30)</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="30"
+                                        value={startJuzPlan}
+                                        onChange={(e) => setStartJuzPlan(Number(e.target.value))}
+                                        className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-secondary"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm text-foreground/50 mb-1 block">Hicri Başlangıç Tarihi</label>
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={startHijriDate}
+                                        className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground/50 cursor-not-allowed"
+                                        placeholder="Miladi Tarihten hesaplanır"
                                     />
                                 </div>
                             </div>
