@@ -456,16 +456,18 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
                                                 <h4 className="text-[9px] font-black text-amber-600/50 uppercase tracking-[0.2em]">{month}</h4>
                                                 <div className="h-px flex-1 bg-amber-500/10" />
                                             </div>
-                                            <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                                            <div className="grid grid-cols-4 min-[400px]:grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1.5">
                                                 {items.sort((a, b) => a.date.getTime() - b.date.getTime()).map(item => {
                                                     const isCompleted = item.okunanSayfalar?.length >= (item.toplamSayfa || 20);
                                                     return (
-                                                        <div key={item.id} className={`p-2.5 rounded-xl border flex flex-col gap-1 transition-all ${isCompleted ? 'bg-green-500/5 border-green-500/10 opacity-60' : 'bg-background/50 border-amber-500/10 hover:border-amber-500/30'}`}>
-                                                            <div className="flex items-center justify-between">
-                                                                <span className={`text-[10px] font-black leading-none ${isCompleted ? 'text-green-600' : 'text-amber-600'}`}>{item.hijriDay} {item.hijriMonth}</span>
-                                                                {isCompleted && <CheckCircle2 className="w-2.5 h-2.5 text-green-500" />}
-                                                            </div>
-                                                            <span className="text-[10px] font-bold text-foreground/50 leading-none truncate">{item.title || `${item.juzNo}. Cüz`}</span>
+                                                        <div key={item.id} className={`p-1.5 rounded-lg border flex flex-col items-center justify-center gap-0.5 transition-all aspect-square sm:aspect-auto sm:h-12 ${isCompleted ? 'bg-green-500/5 border-green-500/10 opacity-40' : 'bg-background/50 border-amber-500/10 hover:border-amber-500/30'}`}>
+                                                            <span className={`text-[10px] font-black leading-none ${isCompleted ? 'text-green-600' : 'text-amber-600'}`}>{item.hijriDay}</span>
+                                                            <span className="text-[8px] font-bold text-foreground/40 leading-none truncate w-full text-center px-0.5">{item.title?.replace('Cüz', 'C.').replace('. ', '.') || `${item.juzNo}.C`}</span>
+                                                            {isCompleted && (
+                                                                <div className="absolute top-0.5 right-0.5">
+                                                                    <CheckCircle2 className="w-2 h-2 text-green-500" />
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     );
                                                 })}
