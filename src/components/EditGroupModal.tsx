@@ -15,7 +15,7 @@ interface EditGroupModalProps {
 }
 
 export default function EditGroupModal({ groupName, juzs, onClose }: EditGroupModalProps) {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [newGroupName, setNewGroupName] = useState(groupName);
     const [loading, setLoading] = useState(false);
     const [planMode, setPlanMode] = useState(false);
@@ -132,7 +132,7 @@ export default function EditGroupModal({ groupName, juzs, onClose }: EditGroupMo
                                         <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">
                                             Hicri: {(() => {
                                                 const [y, m, d] = planStartDate.split('-').map(Number);
-                                                return getHijriDate(new Date(y, m - 1, d)).full;
+                                                return getHijriDate(new Date(y, m - 1, d), profile?.hijriOffset || 0).full;
                                             })()}
                                         </span>
                                     </div>

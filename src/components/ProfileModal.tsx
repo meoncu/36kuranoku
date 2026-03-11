@@ -28,6 +28,7 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
     const [showResumeReading, setShowResumeReading] = useState(profile?.showResumeReading ?? true);
     const [showInstallBanner, setShowInstallBanner] = useState(profile?.showInstallBanner ?? false);
     const [theme, setTheme] = useState<'light' | 'dark'>(profile?.theme || 'dark');
+    const [hijriOffset, setHijriOffset] = useState<number>(profile?.hijriOffset || 0);
     const [loading, setLoading] = useState(false);
 
     // Instant theme preview
@@ -53,6 +54,7 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
                 showResumeReading,
                 showInstallBanner,
                 theme,
+                hijriOffset,
                 updatedAt: new Date()
             });
             onClose();
@@ -189,6 +191,23 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
                                         <span className="text-xs font-bold font-sans">Karanlık</span>
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <label className="text-xs font-bold text-foreground/40 uppercase tracking-widest ml-1 mb-3 block font-sans">Hicri Takvim Ayarı</label>
+                                <div className="flex bg-foreground/5 p-1 rounded-2xl border border-[var(--border)]">
+                                    {[-1, 0, 1].map((offset) => (
+                                        <button
+                                            key={offset}
+                                            type="button"
+                                            onClick={() => setHijriOffset(offset)}
+                                            className={`flex-1 flex items-center justify-center py-3 rounded-xl transition-all border-2 ${hijriOffset === offset ? 'bg-secondary text-white border-white/20 shadow-lg' : 'bg-foreground/5 text-foreground/40 border-transparent hover:text-foreground'}`}
+                                        >
+                                            <span className="text-xs font-bold font-sans">{offset > 0 ? `+${offset}` : offset} Gün</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-[10px] text-foreground/30 mt-2 ml-1">Bölgesel ay farklılıkları için takvimi 1 gün ileri veya geri alabilirsiniz.</p>
                             </div>
                         </div>
 

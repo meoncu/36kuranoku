@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getHijriDate } from '../utils/hijri';
 
 export default function History() {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const navigate = useNavigate();
     const [archivedJuzs, setArchivedJuzs] = useState<Juz[]>([]);
     const [loading, setLoading] = useState(true);
@@ -108,14 +108,14 @@ export default function History() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right shrink-0 cursor-help" title={`Hicri: ${getHijriDate(juz.completedAt?.toDate ? juz.completedAt.toDate() : (juz.updatedAt?.toDate ? juz.updatedAt.toDate() : new Date())).full}`}>
+                                        <div className="text-right shrink-0 cursor-help" title={`Hicri: ${getHijriDate(juz.completedAt?.toDate ? juz.completedAt.toDate() : (juz.updatedAt?.toDate ? juz.updatedAt.toDate() : new Date()), profile?.hijriOffset || 0).full}`}>
                                             <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans mb-0.5">Bitiş</div>
                                             <div className="text-[10px] font-bold text-foreground/60">{formatDate(juz.completedAt || juz.updatedAt)}</div>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 py-3 border-y border-[var(--border)] my-3">
-                                        <div className="space-y-0.5 cursor-help" title={`Hicri: ${getHijriDate(juz.baslangicTarihi?.toDate ? juz.baslangicTarihi.toDate() : new Date(juz.baslangicTarihi)).full}`}>
+                                        <div className="space-y-0.5 cursor-help" title={`Hicri: ${getHijriDate(juz.baslangicTarihi?.toDate ? juz.baslangicTarihi.toDate() : new Date(juz.baslangicTarihi), profile?.hijriOffset || 0).full}`}>
                                             <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans">Başlangıç</div>
                                             <div className="text-[10px] font-bold text-foreground/60">{formatDate(juz.baslangicTarihi)}</div>
                                         </div>

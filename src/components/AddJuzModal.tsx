@@ -6,7 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { X, Search } from 'lucide-react';
 import { CHAPTERS } from '../constants/chapters';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getHijriDate } from '../utils/hijri';
+import { getHijriDate, hijriToGregorian, HIJRI_MONTHS } from '../utils/hijri';
 
 interface AddJuzModalProps {
     onClose: () => void;
@@ -15,7 +15,7 @@ interface AddJuzModalProps {
 }
 
 export default function AddJuzModal({ onClose, initialGroupName = '', existingJuzs = [] }: AddJuzModalProps) {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [selectionType, setSelectionType] = useState<'juz' | 'surah' | 'monthly_page' | 'custom' | 'hijri_plan'>('juz');
     const [selectedJuzs, setSelectedJuzs] = useState<number[]>(() => {
         if (existingJuzs.length > 0) {
@@ -61,6 +61,24 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
     const [notes, setNotes] = useState('');
     const [targetDate, setTargetDate] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Hijri date states for selection
+    const [hStartDate, setHStartDate] = useState(() => getHijriDate(new Date(), profile?.hijriOffset || 0));
+    const [hTargetDate, setHTargetDate] = useState<{ day: number, monthName: string, year: number } | null>(null);
+
+    const updateStartDateFromHijri = (hYear: number, hMonthName: string, hDay: number) => {
+        const mIndex = HIJRI_MONTHS.indexOf(hMonthName) + 1;
+        const newDate = hijriToGregorian(hYear, mIndex, hDay, profile?.hijriOffset || 0);
+        setStartDate(newDate.toISOString().split('T')[0]);
+        setHStartDate({ day: hDay, monthName: hMonthName, year: hYear, full: `${hDay} ${hMonthName} ${hYear}` });
+    };
+
+    const updateTargetDateFromHijri = (hYear: number, hMonthName: string, hDay: number) => {
+        const mIndex = HIJRI_MONTHS.indexOf(hMonthName) + 1;
+        const newDate = hijriToGregorian(hYear, mIndex, hDay, profile?.hijriOffset || 0);
+        setTargetDate(newDate.toISOString().split('T')[0]);
+        setHTargetDate({ day: hDay, monthName: hMonthName, year: hYear });
+    };
 
     const getReadableStartMonth = () => {
         if (!startMonth) return '';
@@ -224,7 +242,7 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
             } else if (selectionType === 'hijri_plan') {
                 const [y, m, d] = startDate.split('-').map(Number);
                 const localDate = new Date(y, m - 1, d);
-                const hDate = getHijriDate(localDate);
+                const hDate = getHijriDate(localDate, profile?.hijriOffset || 0);
                 let finalTitle = title || `Hicri Hatim Planı`;
 
                 promises.push(addDoc(collection(db, 'users', user.uid, 'juzler'), {
@@ -451,17 +469,34 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
                         {selectionType === 'hijri_plan' && (
                             <div className="space-y-4 font-sans border border-secondary/20 bg-secondary/5 p-4 rounded-2xl">
                                 <div>
-                                    <label className="text-xs font-bold text-secondary mb-1 block uppercase tracking-widest">Başlangıç Tarihi</label>
-                                    <input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                        className="w-full bg-background border border-[var(--border)] rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:border-secondary transition-all"
-                                    />
-                                    <p className="text-[10px] text-secondary/60 mt-1 font-bold">
-                                        Hicri: {(() => {
+                                    <label className="text-xs font-bold text-secondary mb-2 block uppercase tracking-widest">Başlangıç Tarihi (Hicri)</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <select
+                                            value={hStartDate.day}
+                                            onChange={(e) => updateStartDateFromHijri(hStartDate.year, hStartDate.monthName, parseInt(e.target.value))}
+                                            className="bg-background border border-[var(--border)] rounded-xl px-2 py-2.5 text-xs text-foreground focus:border-secondary outline-none"
+                                        >
+                                            {Array.from({ length: 30 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                        <select
+                                            value={hStartDate.monthName}
+                                            onChange={(e) => updateStartDateFromHijri(hStartDate.year, e.target.value, hStartDate.day)}
+                                            className="bg-background border border-[var(--border)] rounded-xl px-2 py-2.5 text-xs text-foreground focus:border-secondary outline-none"
+                                        >
+                                            {HIJRI_MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                                        </select>
+                                        <select
+                                            value={hStartDate.year}
+                                            onChange={(e) => updateStartDateFromHijri(parseInt(e.target.value), hStartDate.monthName, hStartDate.day)}
+                                            className="bg-background border border-[var(--border)] rounded-xl px-2 py-2.5 text-xs text-foreground focus:border-secondary outline-none"
+                                        >
+                                            {[1445, 1446, 1447, 1448, 1449, 1450].map(y => <option key={y} value={y}>{y}</option>)}
+                                        </select>
+                                    </div>
+                                    <p className="text-[10px] text-foreground/40 mt-1.5 font-medium italic">
+                                        Miladi Karşılığı: {(() => {
                                             const [y, m, d] = startDate.split('-').map(Number);
-                                            return getHijriDate(new Date(y, m - 1, d)).full;
+                                            return new Date(y, m - 1, d).toLocaleDateString('tr-TR');
                                         })()}
                                     </p>
                                 </div>
@@ -488,13 +523,52 @@ export default function AddJuzModal({ onClose, initialGroupName = '', existingJu
                         )}
 
                         <div className="font-sans">
-                            <label className="text-sm text-foreground/50 mb-1 block">Bitiş Hedefi</label>
-                            <input
-                                type="date"
-                                value={targetDate}
-                                onChange={(e) => setTargetDate(e.target.value)}
-                                className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:border-secondary"
-                            />
+                            <label className="text-sm text-foreground/50 mb-2 block">Bitiş Hedefi</label>
+                            {selectionType === 'hijri_plan' ? (
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <select
+                                            value={hTargetDate?.day || ""}
+                                            onChange={(e) => updateTargetDateFromHijri(hTargetDate?.year || hStartDate.year, hTargetDate?.monthName || hStartDate.monthName, parseInt(e.target.value))}
+                                            className="bg-foreground/5 border border-[var(--border)] rounded-xl px-2 py-3 text-xs text-foreground focus:border-secondary outline-none"
+                                        >
+                                            <option value="" disabled>Gün</option>
+                                            {Array.from({ length: 30 }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                        <select
+                                            value={hTargetDate?.monthName || ""}
+                                            onChange={(e) => updateTargetDateFromHijri(hTargetDate?.year || hStartDate.year, e.target.value, hTargetDate?.day || 1)}
+                                            className="bg-foreground/5 border border-[var(--border)] rounded-xl px-2 py-3 text-xs text-foreground focus:border-secondary outline-none"
+                                        >
+                                            <option value="" disabled>Ay</option>
+                                            {HIJRI_MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                                        </select>
+                                        <select
+                                            value={hTargetDate?.year || ""}
+                                            onChange={(e) => updateTargetDateFromHijri(parseInt(e.target.value), hTargetDate?.monthName || hStartDate.monthName, hTargetDate?.day || 1)}
+                                            className="bg-foreground/5 border border-[var(--border)] rounded-xl px-2 py-3 text-xs text-foreground focus:border-secondary outline-none"
+                                        >
+                                            <option value="" disabled>Yıl</option>
+                                            {[1445, 1446, 1447, 1448, 1449, 1450].map(y => <option key={y} value={y}>{y}</option>)}
+                                        </select>
+                                    </div>
+                                    {targetDate && (
+                                        <p className="text-[10px] text-foreground/40 px-1 italic">
+                                            Miladi Karşılığı: {(() => {
+                                                const [y, m, d] = targetDate.split('-').map(Number);
+                                                return new Date(y, m - 1, d).toLocaleDateString('tr-TR');
+                                            })()}
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <input
+                                    type="date"
+                                    value={targetDate}
+                                    onChange={(e) => setTargetDate(e.target.value)}
+                                    className="w-full bg-foreground/5 border border-[var(--border)] rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:border-secondary"
+                                />
+                            )}
                         </div>
 
                         <div className="font-sans">

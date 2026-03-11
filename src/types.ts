@@ -49,4 +49,5 @@ export interface UserProfile {
     showResumeReading?: boolean;
     showInstallBanner?: boolean;
     theme?: 'light' | 'dark';
+    hijriOffset?: number;
 }

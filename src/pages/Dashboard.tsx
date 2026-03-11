@@ -15,8 +15,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CHAPTERS } from '../constants/chapters';
 import { quranService } from '../services/quranService';
 import { calculatePlannedJuz, getHijriDate } from '../utils/hijri';
+import HijriGroupPlanModal from '../components/HijriGroupPlanModal';
 
-const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive, onUnarchive, onTogglePage }: { juz: Juz, isChild?: boolean, onDelete: (j: Juz) => void, onComplete: (j: Juz) => void, onEdit: (j: Juz) => void, onArchive: (j: Juz) => void, onUnarchive: (j: Juz) => void, onTogglePage: (id: string, page: number, read: boolean) => void }) => {
+const JuzCard = ({ juz, profile, isChild = false, onDelete, onComplete, onEdit, onArchive, onUnarchive, onTogglePage }: { juz: Juz, profile: any, isChild?: boolean, onDelete: (j: Juz) => void, onComplete: (j: Juz) => void, onEdit: (j: Juz) => void, onArchive: (j: Juz) => void, onUnarchive: (j: Juz) => void, onTogglePage: (id: string, page: number, read: boolean) => void }) => {
     const [showGrid, setShowGrid] = useState(false);
     const [selectedPageInfo, setSelectedPageInfo] = useState<{
         pageNo: number;
@@ -124,7 +125,7 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
 
     if (juz.type === 'hijri_plan') {
         const startDate = juz.baslangicTarihi?.toDate ? juz.baslangicTarihi.toDate() : new Date(juz.baslangicTarihi);
-        const plannedJuz = calculatePlannedJuz(startDate, juz.hijriPlanConfig?.startJuz || 1);
+        const plannedJuz = calculatePlannedJuz(startDate, juz.hijriPlanConfig?.startJuz || 1, 1, profile?.hijriOffset || 0);
 
         return (
             <motion.div layout>
@@ -208,15 +209,23 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
                         <div className="space-y-0.5 flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="font-bold text-base sm:text-lg text-foreground leading-tight truncate">{juz.title || `${juz.juzNo}. Cüz`}</h3>
-                                {juz.hedefBitisTarihi && (
-                                    <div
-                                        className="flex items-center gap-1.5 text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-md cursor-help"
-                                        title={`Hicri: ${getHijriDate(juz.hedefBitisTarihi.toDate ? juz.hedefBitisTarihi.toDate() : new Date(juz.hedefBitisTarihi)).full}`}
-                                    >
-                                        <Calendar className="w-3 h-3" />
-                                        <span>{formatDate(juz.hedefBitisTarihi)}</span>
-                                    </div>
-                                )}
+                                {juz.hedefBitisTarihi && (() => {
+                                    const targetDate = juz.hedefBitisTarihi.toDate ? juz.hedefBitisTarihi.toDate() : new Date(juz.hedefBitisTarihi);
+                                    const today = new Date();
+                                    const isToday = targetDate.getDate() === today.getDate() &&
+                                        targetDate.getMonth() === today.getMonth() &&
+                                        targetDate.getFullYear() === today.getFullYear();
+
+                                    return (
+                                        <div
+                                            className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-md cursor-help transition-all ${isToday ? 'bg-secondary text-white shadow-lg shadow-secondary/20 animate-pulse' : 'text-secondary bg-secondary/10'}`}
+                                            title={`Hicri: ${getHijriDate(targetDate, profile?.hijriOffset || 0).full}`}
+                                        >
+                                            <Calendar className={`w-3 h-3 ${isToday ? 'animate-bounce' : ''}`} />
+                                            <span>{isToday ? 'BUGÜNÜN HEDEFİ' : formatDate(juz.hedefBitisTarihi)}</span>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                             {juz.type === 'custom' && (
                                 <p className="text-[10px] text-foreground/40 font-bold uppercase tracking-wider">Sayfa {juz.startPage}-{juz.endPage}</p>
@@ -318,11 +327,12 @@ const JuzCard = ({ juz, isChild = false, onDelete, onComplete, onEdit, onArchive
     );
 };
 
-const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onEditJuz, onArchiveJuz, onUnarchiveJuz, onTogglePage }: { title: string, juzs: Juz[], onDeleteGroup: (n: string, j: Juz[]) => void, onDeleteJuz: (j: Juz) => void, onCompleteJuz: (j: Juz) => void, onEditJuz: (j: Juz) => void, onArchiveJuz: (j: Juz) => void, onUnarchiveJuz: (j: Juz) => void, onTogglePage: (id: string, p: number, r: boolean) => void }) => {
+const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onCompleteJuz, onEditJuz, onArchiveJuz, onUnarchiveJuz, onTogglePage }: { title: string, juzs: Juz[], profile: any, onDeleteGroup: (n: string, j: Juz[]) => void, onDeleteJuz: (j: Juz) => void, onCompleteJuz: (j: Juz) => void, onEditJuz: (j: Juz) => void, onArchiveJuz: (j: Juz) => void, onUnarchiveJuz: (j: Juz) => void, onTogglePage: (id: string, p: number, r: boolean) => void }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [showAddInGroup, setShowAddInGroup] = useState(false);
     const [showCompletedGrid, setShowCompletedGrid] = useState(false);
+    const [showHijriPlanModal, setShowHijriPlanModal] = useState(false);
 
     const activeJuzs = juzs.filter(j => !j.isArchived);
     const totalPages = juzs.reduce((acc, j) => acc + (j.toplamSayfa || 20), 0);
@@ -330,12 +340,21 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
     const progress = totalPages > 0 ? Math.round((readPages / totalPages) * 100) : 0;
     const sortedJuzs = [...activeJuzs].sort((a, b) => (a.juzNo || 0) - (b.juzNo || 0));
     const existingJuzNos = juzs.map(j => j.juzNo).filter(n => n !== undefined && n > 0) as number[];
-
     // Extract all completed juz numbers (both active-completed and archived)
     const completedJuzNos = Array.from(new Set(
         juzs.filter(j => j.juzNo && (j.isArchived || j.okunanSayfalar.length >= (j.toplamSayfa || 20)))
             .map(j => j.juzNo as number)
     )).sort((a, b) => a - b);
+
+    // Group planned juzs by Hijri month (include all pieces, even archived ones, for a complete plan view)
+    const plansByMonth = juzs.filter(j => j.hedefBitisTarihi).reduce((acc, j) => {
+        const date = j.hedefBitisTarihi.toDate ? j.hedefBitisTarihi.toDate() : new Date(j.hedefBitisTarihi);
+        const h = getHijriDate(date, profile?.hijriOffset || 0);
+        const monthKey = `${h.monthName} ${h.year}`;
+        if (!acc[monthKey]) acc[monthKey] = [];
+        acc[monthKey].push({ ...j, hijriDay: h.day, hijriMonth: h.monthName, date });
+        return acc;
+    }, {} as Record<string, any[]>);
 
     return (
         <div className="space-y-2">
@@ -373,12 +392,14 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
                         )}
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary/50 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteGroup(title, juzs); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"><Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowHijriPlanModal(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all backdrop-blur-sm z-20" title="Hicri Planla"><Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/40 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
                         <div className={`p-1.5 sm:p-2 rounded-full transition-all ${isExpanded ? 'bg-foreground/10 rotate-180' : 'bg-foreground/5'}`}><ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-foreground/40" /></div>
                     </div>
                 </div>
                 {isEditing && <EditGroupModal groupName={title} juzs={juzs} onClose={() => setIsEditing(false)} />}
                 <AnimatePresence>{showAddInGroup && <AddJuzModal initialGroupName={title} existingJuzs={existingJuzNos} onClose={() => setShowAddInGroup(false)} />}</AnimatePresence>
+                <AnimatePresence>{showHijriPlanModal && <HijriGroupPlanModal groupName={title} juzs={juzs} onClose={() => setShowHijriPlanModal(false)} />}</AnimatePresence>
             </motion.div>
 
             <AnimatePresence>
@@ -418,8 +439,45 @@ const GroupCard = ({ title, juzs, onDeleteGroup, onDeleteJuz, onCompleteJuz, onE
             </AnimatePresence>
             <AnimatePresence>
                 {isExpanded && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-2.5 pl-2.5 sm:pl-4 border-l border-[var(--border)] ml-0 sm:ml-6 py-2">
-                        {sortedJuzs.map(juz => <JuzCard key={juz.id} juz={juz} isChild onDelete={onDeleteJuz} onComplete={onCompleteJuz} onEdit={onEditJuz} onArchive={onArchiveJuz} onUnarchive={onUnarchiveJuz} onTogglePage={onTogglePage} />)}
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pl-2.5 sm:pl-4 border-l border-[var(--border)] ml-0 sm:ml-6 py-2">
+                        {juzs.some(j => j.hedefBitisTarihi) && (
+                            <div className="glass-card p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 mb-2">
+                                <div className="flex items-center justify-between mb-3 border-b border-amber-500/10 pb-2">
+                                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400/60 uppercase tracking-widest flex items-center gap-2">
+                                        <Calendar className="w-3 h-3" />
+                                        Grup Planlaması
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    {Object.entries(plansByMonth).map(([month, items]) => (
+                                        <div key={month} className="space-y-2 last:mb-0">
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-px flex-1 bg-amber-500/10" />
+                                                <h4 className="text-[9px] font-black text-amber-600/50 uppercase tracking-[0.2em]">{month}</h4>
+                                                <div className="h-px flex-1 bg-amber-500/10" />
+                                            </div>
+                                            <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                                                {items.sort((a, b) => a.date.getTime() - b.date.getTime()).map(item => {
+                                                    const isCompleted = item.okunanSayfalar?.length >= (item.toplamSayfa || 20);
+                                                    return (
+                                                        <div key={item.id} className={`p-2.5 rounded-xl border flex flex-col gap-1 transition-all ${isCompleted ? 'bg-green-500/5 border-green-500/10 opacity-60' : 'bg-background/50 border-amber-500/10 hover:border-amber-500/30'}`}>
+                                                            <div className="flex items-center justify-between">
+                                                                <span className={`text-[10px] font-black leading-none ${isCompleted ? 'text-green-600' : 'text-amber-600'}`}>{item.hijriDay} {item.hijriMonth}</span>
+                                                                {isCompleted && <CheckCircle2 className="w-2.5 h-2.5 text-green-500" />}
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-foreground/50 leading-none truncate">{item.title || `${item.juzNo}. Cüz`}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className="space-y-2.5">
+                            {sortedJuzs.map(juz => <JuzCard key={juz.id} juz={juz} profile={profile} isChild onDelete={onDeleteJuz} onComplete={onCompleteJuz} onEdit={onEditJuz} onArchive={onArchiveJuz} onUnarchive={onUnarchiveJuz} onTogglePage={onTogglePage} />)}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -439,20 +497,7 @@ export default function Dashboard() {
     const [editingJuz, setEditingJuz] = useState<Juz | null>(null);
     const [targetPage, setTargetPage] = useState('');
 
-    const hicriAylar = [
-        'Muharrem', 'Safer', 'Rebîülevvel', 'Rebîülâhir',
-        'Cemâziyelevvel', 'Cemâziyelâhir', 'Receb', 'Şaban',
-        'Ramazan', 'Şevval', 'Zilkade', 'Zilhicce'
-    ];
-    const hicriParts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric'
-    }).format(new Date()).split('/');
-    const hicriGun = hicriParts[1];
-    const hicriAy = hicriAylar[parseInt(hicriParts[0]) - 1] || hicriParts[0];
-    const hicriYil = hicriParts[2]?.replace(/\s*AH/g, '').trim();
-    const hicriTarih = `${hicriGun} ${hicriAy} ${hicriYil}`;
+    const hijriTarih = getHijriDate(new Date(), profile?.hijriOffset || 0).full;
 
     useEffect(() => {
         if (!user) return;
@@ -649,7 +694,7 @@ export default function Dashboard() {
                         {profile?.photoURL ? <img src={profile.photoURL} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" /> : <User className="w-5 h-5 sm:w-6 sm:h-6" />}
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tight leading-none mb-1.5 truncate">{hicriTarih}</h1>
+                        <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tight leading-none mb-1.5 truncate">{hijriTarih}</h1>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-foreground/40 font-sans">
                             <div className="flex items-center gap-1 shrink-0"><CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" /> {stats.completedCount} BİTTİ</div>
                             <div className="flex items-center gap-1 shrink-0"><BookOpen className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-secondary" /> {stats.totalRead} SAYFA</div>
@@ -747,8 +792,8 @@ export default function Dashboard() {
                                 return acc;
                             }, {} as Record<string, Juz[]>)).sort((a, b) => a[0] === 'ungrouped' ? 1 : b[0] === 'ungrouped' ? -1 : 0).map(([groupName, groupJuzs]) => (
                                 groupName === 'ungrouped'
-                                    ? groupJuzs.filter(j => !j.isArchived).map(juz => <JuzCard key={juz.id} juz={juz} onDelete={handleDelete} onComplete={handleCompleteJuz} onEdit={setEditingJuz} onArchive={handleArchive} onUnarchive={handleUnarchive} onTogglePage={handleTogglePage} />)
-                                    : <GroupCard key={groupName} title={groupName} juzs={groupJuzs} onDeleteGroup={handleDeleteGroup} onDeleteJuz={handleDelete} onCompleteJuz={handleCompleteJuz} onEditJuz={setEditingJuz} onArchiveJuz={handleArchive} onUnarchiveJuz={handleUnarchive} onTogglePage={handleTogglePage} />
+                                    ? groupJuzs.filter(j => !j.isArchived).map(juz => <JuzCard key={juz.id} juz={juz} profile={profile} onDelete={handleDelete} onComplete={handleCompleteJuz} onEdit={setEditingJuz} onArchive={handleArchive} onUnarchive={handleUnarchive} onTogglePage={handleTogglePage} />)
+                                    : <GroupCard key={groupName} title={groupName} juzs={groupJuzs} profile={profile} onDeleteGroup={handleDeleteGroup} onDeleteJuz={handleDelete} onCompleteJuz={handleCompleteJuz} onEditJuz={setEditingJuz} onArchiveJuz={handleArchive} onUnarchiveJuz={handleUnarchive} onTogglePage={handleTogglePage} />
                             ))}
                         </div>
                 }
