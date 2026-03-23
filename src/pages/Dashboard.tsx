@@ -727,46 +727,39 @@ export default function Dashboard() {
     const lastReadPage = lastActiveJuz ? (Math.max(...(lastActiveJuz.okunanSayfalar.length > 0 ? lastActiveJuz.okunanSayfalar : [0])) + 1) : 1;
     const currentGlobalPage = (lastActiveJuz?.startPage || 1) + (lastReadPage - 1);
 
-    // Auto-archive completed groups
+    // Auto-archive all completed trackers (Individual cüz or whole groups)
     useEffect(() => {
         if (!user || juzler.length === 0) return;
 
-        const checkAndArchiveCompletedGroups = async () => {
-            const groups = juzler.reduce((acc, j) => {
-                if (j.groupName) {
-                    if (!acc[j.groupName]) acc[j.groupName] = [];
-                    acc[j.groupName].push(j);
-                }
-                return acc;
-            }, {} as Record<string, Juz[]>);
-
+        const checkAndArchiveCompletedItems = async () => {
             const batch = writeBatch(db);
             let hasChanges = false;
 
-            Object.entries(groups).forEach(([_name, members]) => {
-                const allFinished = members.every(m => m.okunanSayfalar.length >= (m.toplamSayfa || 20));
-                const someNotArchived = members.some(m => !m.isArchived);
-
-                if (allFinished && someNotArchived && members.length > 0) {
-                    members.forEach(m => {
-                        if (!m.isArchived) {
-                            batch.update(doc(db, 'users', user.uid, 'juzler', m.id), {
-                                isArchived: true,
-                                completedAt: m.completedAt || serverTimestamp(),
-                                updatedAt: serverTimestamp()
-                            });
-                            hasChanges = true;
-                        }
+            juzler.forEach(juz => {
+                // If it's a 20-page cüz or custom range, check if all pages are done
+                const isFinished = juz.okunanSayfalar.length >= (juz.toplamSayfa || 20);
+                
+                if (isFinished && !juz.isArchived) {
+                    batch.update(doc(db, 'users', user.uid, 'juzler', juz.id), {
+                        isArchived: true,
+                        completedAt: juz.completedAt || serverTimestamp(),
+                        updatedAt: serverTimestamp()
                     });
+                    hasChanges = true;
                 }
             });
 
             if (hasChanges) {
-                try { await batch.commit(); } catch (e) { console.error("Auto-archive error:", e); }
+                try {
+                    await batch.commit();
+                    console.log("Auto-archived finished items.");
+                } catch (e) {
+                    console.error("Auto-archive error:", e);
+                }
             }
         };
 
-        const timer = setTimeout(checkAndArchiveCompletedGroups, 2000); // Wait a bit for all items to load
+        const timer = setTimeout(checkAndArchiveCompletedItems, 2000); // Wait for sync
         return () => clearTimeout(timer);
     }, [user, juzler]);
 
