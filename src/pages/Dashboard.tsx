@@ -645,14 +645,21 @@ export default function Dashboard() {
         if (!user) return;
         try {
             const batch = writeBatch(db);
-            juzs.forEach(juz => batch.update(doc(db, 'users', user.uid, 'juzler', juz.id), {
-                isArchived: true,
-                durum: 'tamamlandi',
-                updatedAt: serverTimestamp(),
-                completedAt: juz.completedAt || serverTimestamp()
-            }));
+            juzs.forEach(juz => {
+                const juzRef = doc(db, 'users', user.uid, 'juzler', juz.id);
+                batch.update(juzRef, {
+                    isArchived: true,
+                    durum: 'tamamlandi',
+                    updatedAt: serverTimestamp(),
+                    completedAt: juz.completedAt || serverTimestamp()
+                });
+            });
             await batch.commit();
-        } catch (error) { alert("Arşivlenirken hata oluştu."); }
+            alert(`${juzs.length} adet cüz başarıyla arşive kaldırıldı.`);
+        } catch (error) { 
+            console.error("Archive Group Error:", error);
+            alert("Arşivlenirken hata oluştu: " + error); 
+        }
     };
 
     const handleUnarchive = async (juz: Juz) => {
