@@ -39,25 +39,71 @@ export default function History() {
         return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
     };
 
-    const getDuration = (start: any, end: any) => {
-        if (!start || !end) return null;
+    const getDurationInDays = (start: any, end: any) => {
+        if (!start || !end) return 0;
         const s = start.toDate ? start.toDate() : new Date(start);
         const e = end.toDate ? end.toDate() : new Date(end);
         const diffTime = Math.abs(e.getTime() - s.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays === 0 ? 'Aynı gün bitti' : `${diffDays} gün sürdü`;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
     };
 
-    const handleDuaConfirm = async (juzId: string) => {
+    const handleDuaConfirmGroup = async (groupItems: Juz[]) => {
         if (!user) return;
         try {
-            await updateDoc(doc(db, 'users', user.uid, 'juzler', juzId), {
-                isDuaRead: true,
-                updatedAt: serverTimestamp()
-            });
+            const batchPromises = groupItems.map(j =>
+                updateDoc(doc(db, 'users', user.uid, 'juzler', j.id), {
+                    isDuaRead: true,
+                    updatedAt: serverTimestamp()
+                })
+            );
+            await Promise.all(batchPromises);
         } catch (err) {
             console.error(err);
         }
+    };
+
+    // Grouping Logic
+    const groupedHatims = archivedJuzs.reduce((acc, juz) => {
+        const key = juz.groupName || juz.id; // If no group, treat as single item
+        if (!acc[key]) {
+            acc[key] = {
+                title: juz.groupName || juz.title || 'İsimsiz Hatim',
+                items: [],
+                isHatim: juz.type === 'monthly_page' || juz.type === 'hijri_plan' || false, // Single 30-unit tracker or group
+                isGroup: !!juz.groupName
+            };
+        }
+        acc[key].items.push(juz);
+        // If it's a group, mark as hatim if it has 30 items or specifically marked
+        if (acc[key].items.length >= 30) acc[key].isHatim = true;
+        return acc;
+    }, {} as Record<string, { title: string, items: Juz[], isHatim: boolean, isGroup: boolean }>);
+
+    const hatimSummaries = Object.values(groupedHatims).map(group => {
+        const starts = group.items.map(j => j.baslangicTarihi?.toDate ? j.baslangicTarihi.toDate() : new Date(j.baslangicTarihi)).filter(Boolean);
+        const ends = group.items.map(j => j.completedAt?.toDate ? j.completedAt.toDate() : (j.updatedAt?.toDate ? j.updatedAt.toDate() : new Date())).filter(Boolean);
+
+        const startDate = starts.length > 0 ? new Date(Math.min(...starts.map(d => d.getTime()))) : null;
+        const endDate = ends.length > 0 ? new Date(Math.max(...ends.map(d => d.getTime()))) : null;
+        const duration = getDurationInDays(startDate, endDate);
+        const isAllDuaDone = group.items.every(j => j.isDuaRead);
+        const completedJuzCount = group.isHatim ? 30 : group.items.length;
+
+        return {
+            ...group,
+            startDate,
+            endDate,
+            duration,
+            isAllDuaDone,
+            completedJuzCount,
+            id: group.items[0].id // Use first item's ID as key
+        };
+    }).sort((a, b) => (b.endDate?.getTime() || 0) - (a.endDate?.getTime() || 0));
+
+    const globalStats = {
+        totalFullHatims: hatimSummaries.filter(h => h.isHatim).length,
+        totalJuzs: archivedJuzs.length,
+        avgDuration: Math.round(hatimSummaries.filter(h => h.isHatim).reduce((acc, h) => acc + h.duration, 0) / (hatimSummaries.filter(h => h.isHatim).length || 1))
     };
 
     return (
@@ -67,8 +113,24 @@ export default function History() {
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div>
-                    <h1 className="text-2xl font-black text-foreground tracking-tight leading-none mb-1">Hatim Geçmişi</h1>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 font-sans">Tamamlanan ve Arşivlenen Takipler</p>
+                    <h1 className="text-2xl font-black text-foreground tracking-tight leading-none mb-1">Hatim İstatistikleri</h1>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 font-sans">Tamamlanan Kur'an Yolculuklarınız</p>
+                </div>
+            </div>
+
+            {/* Global Stats Dashboard */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="glass-card p-5 rounded-[32px] border-secondary/20 bg-secondary/5 text-center">
+                    <div className="text-2xl font-black text-secondary mb-1">{globalStats.totalFullHatims}</div>
+                    <div className="text-[9px] font-black text-secondary/60 uppercase tracking-widest">TOPLAM HATİM</div>
+                </div>
+                <div className="glass-card p-5 rounded-[32px] border-green-500/20 bg-green-500/5 text-center">
+                    <div className="text-2xl font-black text-green-600 mb-1">{globalStats.totalJuzs}</div>
+                    <div className="text-[9px] font-black text-green-600/60 uppercase tracking-widest">OKUNAN CÜZ</div>
+                </div>
+                <div className="glass-card p-5 rounded-[32px] border-amber-500/20 bg-amber-500/5 text-center col-span-2 sm:col-span-1">
+                    <div className="text-2xl font-black text-amber-600 mb-1">{globalStats.avgDuration} gün</div>
+                    <div className="text-[9px] font-black text-amber-600/60 uppercase tracking-widest">ORT. HATİM SÜRESİ</div>
                 </div>
             </div>
 
@@ -77,76 +139,78 @@ export default function History() {
                     <div className="grid gap-4">
                         {[1, 2, 3].map(i => <div key={i} className="glass-card h-32 rounded-3xl animate-pulse" />)}
                     </div>
-                ) : archivedJuzs.length === 0 ? (
+                ) : hatimSummaries.length === 0 ? (
                     <div className="text-center py-16 glass-card rounded-[40px] border-[var(--border)]">
                         <BookOpen className="w-16 h-16 text-foreground/5 mx-auto mb-6" />
                         <h3 className="text-foreground/40 font-sans">Henüz tamamlanmış hatim bulunmuyor</h3>
                     </div>
                 ) : (
                     <div className="grid gap-4">
-                        {archivedJuzs.map(juz => (
+                        {hatimSummaries.map(hatim => (
                             <motion.div
-                                key={juz.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="glass-card p-4 sm:p-6 rounded-[32px] border-[var(--border)] relative overflow-hidden group"
+                                key={hatim.id}
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className={`glass-card p-6 rounded-[32px] border-[var(--border)] relative overflow-hidden transition-all ${hatim.isHatim ? 'ring-2 ring-secondary/20' : ''}`}
                             >
-                                {/* Progress Background */}
                                 <div className="absolute inset-y-0 left-0 bg-green-500/[0.03] w-full" />
 
                                 <div className="relative z-10">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-600 shrink-0">
-                                                <CheckCircle2 className="w-5 h-5" />
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${hatim.isHatim ? 'bg-secondary/20 text-secondary' : 'bg-foreground/5 text-foreground/20'}`}>
+                                                {hatim.isHatim ? <Heart className="w-6 h-6 fill-current" /> : <BookOpen className="w-6 h-6" />}
                                             </div>
                                             <div className="min-w-0">
-                                                <h3 className="font-bold text-base text-foreground truncate">{juz.title || `${juz.juzNo}. Cüz`}</h3>
-                                                <div className="flex items-center gap-2 text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans">
-                                                    <Clock className="w-3 h-3" />
-                                                    {getDuration(juz.baslangicTarihi, juz.completedAt || juz.updatedAt)}
+                                                <h3 className="font-bold text-lg text-foreground truncate">{hatim.title}</h3>
+                                                <div className="flex items-center gap-2 text-[10px] font-black text-secondary uppercase tracking-[0.15em] font-sans">
+                                                    {hatim.isHatim ? 'TAMAMLANMIŞ HATİM' : 'PARÇA TAKİBİ'}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right shrink-0 cursor-help" title={`Hicri: ${getHijriDate(juz.completedAt?.toDate ? juz.completedAt.toDate() : (juz.updatedAt?.toDate ? juz.updatedAt.toDate() : new Date()), profile?.hijriOffset || 0).full}`}>
-                                            <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans mb-0.5">Bitiş</div>
-                                            <div className="text-[10px] font-bold text-foreground/60">{formatDate(juz.completedAt || juz.updatedAt)}</div>
+                                        <div className="text-right">
+                                            <div className="text-[9px] font-black text-foreground/20 uppercase tracking-widest mb-0.5">BİTİŞ</div>
+                                            <div className="text-xs font-bold text-foreground/60">{formatDate(hatim.endDate)}</div>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4 py-3 border-y border-[var(--border)] my-3">
-                                        <div className="space-y-0.5 cursor-help" title={`Hicri: ${getHijriDate(juz.baslangicTarihi?.toDate ? juz.baslangicTarihi.toDate() : new Date(juz.baslangicTarihi), profile?.hijriOffset || 0).full}`}>
-                                            <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans">Başlangıç</div>
-                                            <div className="text-[10px] font-bold text-foreground/60">{formatDate(juz.baslangicTarihi)}</div>
+                                    <div className="grid grid-cols-2 gap-6 py-4 border-y border-[var(--border)] my-4">
+                                        <div className="space-y-1">
+                                            <div className="text-[9px] font-black text-foreground/20 uppercase tracking-widest">SÜREÇ</div>
+                                            <div className="text-xs font-bold text-foreground/70 flex items-center gap-2">
+                                                <Calendar className="w-3.5 h-3.5 opacity-30" />
+                                                {formatDate(hatim.startDate)} - {hatim.duration} Gün
+                                            </div>
                                         </div>
-                                        <div className="space-y-0.5">
-                                            <div className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest font-sans">İçerik</div>
-                                            <div className="text-[10px] font-bold text-foreground/60">
-                                                {juz.type === 'surah' ? 'Sure Takibi' : juz.type === 'custom' ? `${juz.toplamSayfa} Sayfa` : `${juz.juzNo}. Cüz`}
+                                        <div className="space-y-1">
+                                            <div className="text-[9px] font-black text-foreground/20 uppercase tracking-widest">İÇERİK</div>
+                                            <div className="text-xs font-bold text-foreground/70 flex items-center gap-2">
+                                                <LayoutGrid className="w-3.5 h-3.5 opacity-30" />
+                                                {hatim.completedJuzCount} Cüz Tamamlandı
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            {!juz.isDuaRead ? (
+                                    <div className="flex items-center justify-between mt-2">
+                                        <div className="flex items-center gap-3">
+                                            {!hatim.isAllDuaDone ? (
                                                 <button
-                                                    onClick={() => handleDuaConfirm(juz.id)}
-                                                    className="flex items-center gap-2 bg-amber-500 text-white px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-amber-500/20 active:scale-95 transition-all"
+                                                    onClick={() => handleDuaConfirmGroup(hatim.items)}
+                                                    className="flex items-center gap-2 bg-amber-500 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/30 active:scale-95 transition-all"
                                                 >
                                                     <Heart className="w-3.5 h-3.5 fill-current" />
-                                                    Duayı Yaptım
+                                                    HATİM DUASINI YAPTIM
                                                 </button>
                                             ) : (
-                                                <div className="flex items-center gap-2 text-green-600 bg-green-500/10 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest">
-                                                    <Heart className="w-3.5 h-3.5 fill-current" />
-                                                    Duası Yapıldı
+                                                <div className="flex items-center gap-2 text-green-600 bg-green-500/10 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                    DUASI YAPILDI
                                                 </div>
                                             )}
                                         </div>
-                                        <Link to={juz.type === 'surah' ? `/reader/${juz.surahId}` : `/juz/${juz.id}`} className="p-2 bg-foreground/5 rounded-xl text-foreground/40 hover:text-secondary hover:bg-secondary/10 transition-all">
+                                        <div className="w-10 h-10 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/20 group-hover:bg-secondary/10 group-hover:text-secondary transition-all">
                                             <ChevronRight className="w-5 h-5" />
-                                        </Link>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>

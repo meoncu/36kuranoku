@@ -211,6 +211,9 @@ export default function ProfileModal({ user, profile, onClose }: ProfileModalPro
                             </div>
                         </div>
 
+                        <div className="pt-4 text-center">
+                            <p className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.2em] font-sans italic">Kuran Takip v1.7.0</p>
+                        </div>
 
                         <button
                             type="submit"

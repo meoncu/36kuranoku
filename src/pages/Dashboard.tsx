@@ -268,12 +268,12 @@ const JuzCard = ({ juz, profile, isChild = false, onDelete, onComplete, onEdit, 
                         exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden"
                     >
-                        <div className="px-2 sm:px-6 pb-4 sm:pb-6 pt-2 bg-foreground/[0.03] border-t border-[var(--border)] space-y-3">
-                            <div className="flex items-center justify-between mb-1">
+                        <div className="px-1.5 sm:px-6 pb-4 sm:pb-6 pt-2 bg-foreground/[0.03] border-t border-[var(--border)] space-y-3">
+                            <div className="flex items-center justify-between mb-1 px-1">
                                 <span className="text-[9px] sm:text-[10px] font-bold text-foreground/40 uppercase tracking-widest">Hızlı Takip</span>
                                 <span className="text-[9px] sm:text-[10px] font-bold text-secondary uppercase tracking-widest bg-secondary/10 px-2 py-0.5 rounded-md">S. {juz.okunanSayfalar.length}/{juz.toplamSayfa}</span>
                             </div>
-                            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2">
+                            <div className="grid grid-cols-4 min-[340px]:grid-cols-5 sm:grid-cols-10 gap-1 sm:gap-2">
                                 {Array.from({ length: juz.toplamSayfa || 20 }, (_, i) => i + 1).map(page => {
                                     const isRead = juz.okunanSayfalar.includes(page);
                                     return (
@@ -335,9 +335,10 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
     const [showHijriPlanModal, setShowHijriPlanModal] = useState(false);
 
     const activeJuzs = juzs.filter(j => !j.isArchived);
-    const totalPages = juzs.reduce((acc, j) => acc + (j.toplamSayfa || 20), 0);
-    const readPages = juzs.reduce((acc, j) => acc + (j.okunanSayfalar?.length || 0), 0);
-    const progress = totalPages > 0 ? Math.round((readPages / totalPages) * 100) : 0;
+    const finishedJuzs = juzs.filter(j => j.okunanSayfalar.length >= (j.toplamSayfa || 20));
+    const remainingJuzs = juzs.length - finishedJuzs.length;
+    const progress = juzs.length > 0 ? Math.round((finishedJuzs.length / juzs.length) * 100) : 0;
+    
     const sortedJuzs = [...activeJuzs].sort((a, b) => (a.juzNo || 0) - (b.juzNo || 0));
     const existingJuzNos = juzs.map(j => j.juzNo).filter(n => n !== undefined && n > 0) as number[];
     // Extract all completed juz numbers (both active-completed and archived)
@@ -363,7 +364,12 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
                     <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-inner transition-colors shrink-0 ${progress === 100 ? 'bg-green-500/20 text-green-500' : 'bg-secondary/20 text-secondary'}`}>{isExpanded ? <FolderOpen className="w-5 h-5 sm:w-6 sm:h-6" /> : <Folder className="w-5 h-5 sm:w-6 sm:h-6" />}</div>
                     <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-sm sm:text-lg text-foreground group-hover:text-secondary transition-colors truncate">{title}</h3>
-                        <p className="text-[9px] sm:text-xs text-foreground/40 font-medium font-sans truncate">{juzs.length} Parça • %{progress}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[9px] sm:text-xs text-foreground/40 font-medium font-sans truncate">{juzs.length} Parça • %{progress}</p>
+                            {remainingJuzs > 0 && (
+                                <span className="bg-secondary/10 text-secondary text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">{remainingJuzs} Cüz Kaldı</span>
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -373,14 +379,14 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
                             className="flex items-center gap-1.5 bg-secondary text-white px-2.5 py-1.5 rounded-xl text-[10px] font-bold hover:opacity-90 transition-all shadow-lg shadow-secondary/20 active:scale-95 z-20 font-sans shrink-0"
                         >
                             <Plus className="w-3 h-3" />
-                            <span className="hidden min-[380px]:inline">Ekle</span>
+                            <span className="hidden min-[400px]:inline">Ekle</span>
                         </button>
                         <div className="text-right hidden md:block font-sans shrink-0">
-                            <span className="text-[10px] text-foreground/30 font-bold block leading-none">{readPages} / {totalPages} P</span>
+                            <span className="text-[10px] text-foreground/30 font-bold block leading-none">{finishedJuzs.length} / {juzs.length} C</span>
                             <div className="w-16 h-1 bg-foreground/[0.08] dark:bg-foreground/5 rounded-full mt-1 overflow-hidden inline-block"><div className="h-full bg-secondary" style={{ width: `${progress}%` }} /></div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 sm:gap-1.5">
                         {completedJuzNos.length > 0 && (
                             <button
                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCompletedGrid(!showCompletedGrid); }}
@@ -390,10 +396,9 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
                                 <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                         )}
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary/50 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteGroup(title, juzs); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"><Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowHijriPlanModal(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 hover:bg-amber-500 hover:text-white transition-all backdrop-blur-sm z-20" title="Hicri Planla"><Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-foreground/5 flex items-center justify-center text-foreground/40 hover:bg-secondary hover:text-white transition-all backdrop-blur-sm z-20"><Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteGroup(title, juzs); }} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500/50 hover:bg-red-500 hover:text-white transition-all backdrop-blur-sm z-20"><Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></button>
                         <div className={`p-1.5 sm:p-2 rounded-full transition-all ${isExpanded ? 'bg-foreground/10 rotate-180' : 'bg-foreground/5'}`}><ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-foreground/40" /></div>
                     </div>
                 </div>
@@ -439,9 +444,9 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
             </AnimatePresence>
             <AnimatePresence>
                 {isExpanded && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pl-2.5 sm:pl-4 border-l border-[var(--border)] ml-0 sm:ml-6 py-2">
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 pl-1.5 min-[380px]:pl-2.5 sm:pl-4 border-l border-[var(--border)] ml-1 sm:ml-6 py-2 overflow-x-hidden">
                         {juzs.some(j => j.hedefBitisTarihi) && (
-                            <div className="glass-card p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 mb-2">
+                            <div className="glass-card p-3 sm:p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 mb-2">
                                 <div className="flex items-center justify-between mb-3 border-b border-amber-500/10 pb-2">
                                     <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400/60 uppercase tracking-widest flex items-center gap-2">
                                         <Calendar className="w-3 h-3" />
@@ -456,11 +461,11 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
                                                 <h4 className="text-[9px] font-black text-amber-600/50 uppercase tracking-[0.2em]">{month}</h4>
                                                 <div className="h-px flex-1 bg-amber-500/10" />
                                             </div>
-                                            <div className="grid grid-cols-4 min-[400px]:grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1.5">
+                                            <div className="grid grid-cols-3 min-[340px]:grid-cols-4 min-[400px]:grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1 sm:gap-1.5">
                                                 {items.sort((a, b) => a.date.getTime() - b.date.getTime()).map(item => {
                                                     const isCompleted = item.okunanSayfalar?.length >= (item.toplamSayfa || 20);
                                                     return (
-                                                        <div key={item.id} className={`p-1.5 rounded-lg border flex flex-col items-center justify-center gap-0.5 transition-all aspect-square sm:aspect-auto sm:h-12 ${isCompleted ? 'bg-green-500/5 border-green-500/10 opacity-40' : 'bg-background/50 border-amber-500/10 hover:border-amber-500/30'}`}>
+                                                        <div key={item.id} className={`p-1 sm:p-1.5 rounded-lg border flex flex-col items-center justify-center gap-0.5 transition-all aspect-square sm:aspect-auto sm:h-12 ${isCompleted ? 'bg-green-500/5 border-green-500/10 opacity-40' : 'bg-background/50 border-amber-500/10 hover:border-amber-500/30'}`}>
                                                             <span className={`text-[10px] font-black leading-none ${isCompleted ? 'text-green-600' : 'text-amber-600'}`}>{item.hijriDay}</span>
                                                             <span className="text-[8px] font-bold text-foreground/40 leading-none truncate w-full text-center px-0.5">{item.title?.replace('Cüz', 'C.').replace('. ', '.') || `${item.juzNo}.C`}</span>
                                                             {isCompleted && (
@@ -545,6 +550,36 @@ export default function Dashboard() {
         checkAndCreateMonthlyTracker();
     }, [user]);
 
+    const [showHatimCompletedModal, setShowHatimCompletedModal] = useState<{ title: string, duration: number } | null>(null);
+
+    const checkFullCompletion = (juz: Juz, allJuzs: Juz[]) => {
+        // If it's a 30-unit tracker (monthly/hijri), check its internal progress
+        if ((juz.type === 'monthly_page' || juz.type === 'hijri_plan') && juz.okunanSayfalar.length >= 29) { // 29 because the latest just added makes it 30
+            const start = juz.baslangicTarihi?.toDate ? juz.baslangicTarihi.toDate() : new Date(juz.baslangicTarihi);
+            const end = new Date();
+            const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+            setShowHatimCompletedModal({ title: juz.title || 'Hatim', duration: days || 1 });
+            return;
+        }
+
+        // If it's part of a group, check if all members in the group are now finished
+        if (juz.groupName) {
+            const groupMembers = allJuzs.filter(j => j.groupName === juz.groupName);
+            // Count how many will be finished after this update
+            const finishedCount = groupMembers.filter(j =>
+                j.id === juz.id ? true : (j.okunanSayfalar.length >= (j.toplamSayfa || 20))
+            ).length;
+
+            if (finishedCount === groupMembers.length && groupMembers.length > 1) {
+                const starts = groupMembers.map(j => j.baslangicTarihi?.toDate ? j.baslangicTarihi.toDate() : new Date(j.baslangicTarihi));
+                const start = new Date(Math.min(...starts.map(d => d.getTime())));
+                const end = new Date();
+                const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                setShowHatimCompletedModal({ title: juz.groupName, duration: days || 1 });
+            }
+        }
+    };
+
     const handleTogglePage = async (juzId: string, pageNum: number, currentlyRead: boolean) => {
         if (!user) return;
         const juzRef = doc(db, 'users', user.uid, 'juzler', juzId);
@@ -552,18 +587,24 @@ export default function Dashboard() {
         if (!juz) return;
 
         try {
-            const nextPages = currentlyRead
-                ? juz.okunanSayfalar.filter(p => p !== pageNum)
-                : [...juz.okunanSayfalar, pageNum];
+            const nextPagesCount = currentlyRead
+                ? juz.okunanSayfalar.length - 1
+                : juz.okunanSayfalar.length + 1;
 
-            const isFinished = nextPages.length >= (juz.toplamSayfa || 20);
+            const isFinished = nextPagesCount >= (juz.toplamSayfa || 20);
+
+            // If this toggle completes the juz, check if it also completes the whole hatim/group
+            if (!currentlyRead && isFinished) {
+                checkFullCompletion(juz, juzler);
+            }
 
             await updateDoc(juzRef, {
                 okunanSayfalar: currentlyRead ? arrayRemove(pageNum) : arrayUnion(pageNum),
                 durum: isFinished ? 'tamamlandi' : 'devam-ediyor',
                 isArchived: isFinished ? true : false,
                 completedAt: isFinished ? (juz.completedAt || serverTimestamp()) : null,
-                updatedAt: serverTimestamp()
+                updatedAt: serverTimestamp(),
+                isDuaRead: isFinished ? (juz.isDuaRead ?? false) : false
             });
         } catch (error) { console.error("Toggle error:", error); }
     };
@@ -686,8 +727,89 @@ export default function Dashboard() {
     const lastReadPage = lastActiveJuz ? (Math.max(...(lastActiveJuz.okunanSayfalar.length > 0 ? lastActiveJuz.okunanSayfalar : [0])) + 1) : 1;
     const currentGlobalPage = (lastActiveJuz?.startPage || 1) + (lastReadPage - 1);
 
+    // Auto-archive completed groups
+    useEffect(() => {
+        if (!user || juzler.length === 0) return;
+
+        const checkAndArchiveCompletedGroups = async () => {
+            const groups = juzler.reduce((acc, j) => {
+                if (j.groupName) {
+                    if (!acc[j.groupName]) acc[j.groupName] = [];
+                    acc[j.groupName].push(j);
+                }
+                return acc;
+            }, {} as Record<string, Juz[]>);
+
+            const batch = writeBatch(db);
+            let hasChanges = false;
+
+            Object.entries(groups).forEach(([_name, members]) => {
+                const allFinished = members.every(m => m.okunanSayfalar.length >= (m.toplamSayfa || 20));
+                const someNotArchived = members.some(m => !m.isArchived);
+
+                if (allFinished && someNotArchived && members.length > 0) {
+                    members.forEach(m => {
+                        if (!m.isArchived) {
+                            batch.update(doc(db, 'users', user.uid, 'juzler', m.id), {
+                                isArchived: true,
+                                completedAt: m.completedAt || serverTimestamp(),
+                                updatedAt: serverTimestamp()
+                            });
+                            hasChanges = true;
+                        }
+                    });
+                }
+            });
+
+            if (hasChanges) {
+                try { await batch.commit(); } catch (e) { console.error("Auto-archive error:", e); }
+            }
+        };
+
+        const timer = setTimeout(checkAndArchiveCompletedGroups, 2000); // Wait a bit for all items to load
+        return () => clearTimeout(timer);
+    }, [user, juzler]);
+
     return (
         <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 sm:px-4 px-2">
+            <AnimatePresence>
+                {showHatimCompletedModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/60 p-4 backdrop-blur-md">
+                        <motion.div
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                            className="bg-card glass-card border-2 border-green-500/30 w-full max-w-sm rounded-[40px] p-8 shadow-2xl relative text-center"
+                        >
+                            <div className="w-20 h-20 bg-green-500/20 rounded-3xl flex items-center justify-center text-green-600 mx-auto mb-6 animate-bounce">
+                                <Heart className="w-10 h-10 fill-current" />
+                            </div>
+                            <h2 className="text-3xl font-black text-foreground mb-2">Mübarek Olsun!</h2>
+                            <p className="text-foreground/60 font-medium mb-6">
+                                <span className="text-green-600 font-bold">{showHatimCompletedModal.title}</span> takibinizi <span className="text-foreground font-bold">{showHatimCompletedModal.duration} günde</span> başarıyla tamamladınız. Rabbim kabul eylesin.
+                            </p>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => {
+                                        setShowHatimCompletedModal(null);
+                                        navigate('/history');
+                                    }}
+                                    className="w-full bg-secondary text-white font-bold py-4 rounded-2xl shadow-lg shadow-secondary/20 active:scale-95 transition-all"
+                                >
+                                    Hatim Geçmişine Git
+                                </button>
+                                <button
+                                    onClick={() => setShowHatimCompletedModal(null)}
+                                    className="w-full bg-foreground/5 text-foreground/40 font-bold py-4 rounded-2xl hover:bg-foreground/10 transition-all"
+                                >
+                                    Kapat
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <AnimatePresence>{showProfileModal && <ProfileModal user={user} profile={profile} onClose={() => setShowProfileModal(false)} />}</AnimatePresence>
 
             <div className="flex items-center justify-between mb-2">
