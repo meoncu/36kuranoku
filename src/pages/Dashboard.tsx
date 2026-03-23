@@ -327,7 +327,7 @@ const JuzCard = ({ juz, profile, isChild = false, onDelete, onComplete, onEdit, 
     );
 };
 
-const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onCompleteJuz, onEditJuz, onArchiveJuz, onUnarchiveJuz, onTogglePage }: { title: string, juzs: Juz[], profile: any, onDeleteGroup: (n: string, j: Juz[]) => void, onDeleteJuz: (j: Juz) => void, onCompleteJuz: (j: Juz) => void, onEditJuz: (j: Juz) => void, onArchiveJuz: (j: Juz) => void, onUnarchiveJuz: (j: Juz) => void, onTogglePage: (id: string, p: number, r: boolean) => void }) => {
+const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onCompleteJuz, onEditJuz, onArchiveJuz, onUnarchiveJuz, onTogglePage, onArchiveGroup }: { title: string, juzs: Juz[], profile: any, onDeleteGroup: (n: string, j: Juz[]) => void, onDeleteJuz: (j: Juz) => void, onCompleteJuz: (j: Juz) => void, onEditJuz: (j: Juz) => void, onArchiveJuz: (j: Juz) => void, onUnarchiveJuz: (j: Juz) => void, onTogglePage: (id: string, p: number, r: boolean) => void, onArchiveGroup: (n: string, j: Juz[]) => void }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [showAddInGroup, setShowAddInGroup] = useState(false);
@@ -356,6 +356,13 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
         acc[monthKey].push({ ...j, hijriDay: h.day, hijriMonth: h.monthName, date });
         return acc;
     }, {} as Record<string, any[]>);
+    const onArchiveGroupLocal = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.confirm(`${title} grubundaki 30 cüzün tamamı arşive kaldırılacak. Onaylıyor musunuz?`)) {
+            onArchiveGroup(title, juzs);
+        }
+    };
 
     return (
         <div className="space-y-2">
@@ -369,22 +376,32 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
                             {remainingJuzs > 0 && (
                                 <span className="bg-secondary/10 text-secondary text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">{remainingJuzs} Cüz Kaldı</span>
                             )}
+                            {progress === 100 && (
+                                <span className="bg-green-500/10 text-green-500 text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider">Bitti</span>
+                            )}
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }}
-                            className="flex items-center gap-1.5 bg-secondary text-white px-2.5 py-1.5 rounded-xl text-[10px] font-bold hover:opacity-90 transition-all shadow-lg shadow-secondary/20 active:scale-95 z-20 font-sans shrink-0"
-                        >
-                            <Plus className="w-3 h-3" />
-                            <span className="hidden min-[400px]:inline">Ekle</span>
-                        </button>
-                        <div className="text-right hidden md:block font-sans shrink-0">
-                            <span className="text-[10px] text-foreground/30 font-bold block leading-none">{finishedJuzs.length} / {juzs.length} C</span>
-                            <div className="w-16 h-1 bg-foreground/[0.08] dark:bg-foreground/5 rounded-full mt-1 overflow-hidden inline-block"><div className="h-full bg-secondary" style={{ width: `${progress}%` }} /></div>
-                        </div>
+                        {progress < 100 && (
+                            <button
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowAddInGroup(true); }}
+                                className="flex items-center gap-1.5 bg-secondary text-white px-2.5 py-1.5 rounded-xl text-[10px] font-bold hover:opacity-90 transition-all shadow-lg shadow-secondary/20 active:scale-95 z-20 font-sans shrink-0"
+                            >
+                                <Plus className="w-3 h-3" />
+                                <span className="hidden min-[400px]:inline">Ekle</span>
+                            </button>
+                        )}
+                        {progress === 100 && (
+                            <button
+                                onClick={onArchiveGroupLocal}
+                                className="flex items-center gap-1.5 bg-green-500 text-white px-2.5 py-1.5 rounded-xl text-[10px] font-bold hover:opacity-90 transition-all shadow-lg shadow-green-500/20 active:scale-95 z-20 font-sans shrink-0"
+                            >
+                                <Archive className="w-3 h-3" />
+                                <span className="hidden min-[400px]:inline">Arşivle</span>
+                            </button>
+                        )}
                     </div>
                     <div className="flex items-center gap-1 sm:gap-1.5">
                         {completedJuzNos.length > 0 && (
@@ -622,6 +639,20 @@ export default function Dashboard() {
                 });
             } catch (error) { alert("Hata oluştu."); }
         }
+    };
+
+    const handleArchiveGroup = async (groupName: string, juzs: Juz[]) => {
+        if (!user) return;
+        try {
+            const batch = writeBatch(db);
+            juzs.forEach(juz => batch.update(doc(db, 'users', user.uid, 'juzler', juz.id), {
+                isArchived: true,
+                durum: 'tamamlandi',
+                updatedAt: serverTimestamp(),
+                completedAt: juz.completedAt || serverTimestamp()
+            }));
+            await batch.commit();
+        } catch (error) { alert("Arşivlenirken hata oluştu."); }
     };
 
     const handleUnarchive = async (juz: Juz) => {
@@ -910,7 +941,7 @@ export default function Dashboard() {
                             }, {} as Record<string, Juz[]>)).sort((a, b) => a[0] === 'ungrouped' ? 1 : b[0] === 'ungrouped' ? -1 : 0).map(([groupName, groupJuzs]) => (
                                 groupName === 'ungrouped'
                                     ? groupJuzs.filter(j => !j.isArchived).map(juz => <JuzCard key={juz.id} juz={juz} profile={profile} onDelete={handleDelete} onComplete={handleCompleteJuz} onEdit={setEditingJuz} onArchive={handleArchive} onUnarchive={handleUnarchive} onTogglePage={handleTogglePage} />)
-                                    : <GroupCard key={groupName} title={groupName} juzs={groupJuzs} profile={profile} onDeleteGroup={handleDeleteGroup} onDeleteJuz={handleDelete} onCompleteJuz={handleCompleteJuz} onEditJuz={setEditingJuz} onArchiveJuz={handleArchive} onUnarchiveJuz={handleUnarchive} onTogglePage={handleTogglePage} />
+                                    : <GroupCard key={groupName} title={groupName} juzs={groupJuzs} profile={profile} onDeleteGroup={handleDeleteGroup} onDeleteJuz={handleDelete} onCompleteJuz={handleCompleteJuz} onEditJuz={setEditingJuz} onArchiveJuz={handleArchive} onUnarchiveJuz={handleUnarchive} onTogglePage={handleTogglePage} onArchiveGroup={handleArchiveGroup} />
                             ))}
                         </div>
                 }
