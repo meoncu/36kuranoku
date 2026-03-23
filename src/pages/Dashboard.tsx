@@ -512,10 +512,12 @@ const GroupCard = ({ title, juzs, profile, onDeleteGroup, onDeleteJuz, onComplet
 export default function Dashboard() {
     const { user, profile } = useAuth();
     const navigate = useNavigate();
-    const [juzler, setJuzler] = useState<Juz[]>([]);
+    const [allJuzs, setAllJuzs] = useState<Juz[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [loading, setLoading] = useState(true);
+
+    const juzler = allJuzs.filter(j => j.isArchived !== true);
 
     const [showPageModal, setShowPageModal] = useState(false);
     const [editingJuz, setEditingJuz] = useState<Juz | null>(null);
@@ -528,7 +530,7 @@ export default function Dashboard() {
         const q = query(collection(db, 'users', user.uid, 'juzler'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Juz));
-            setJuzler(docs);
+            setAllJuzs(docs);
             setLoading(false);
         });
         return unsubscribe;
@@ -767,21 +769,24 @@ export default function Dashboard() {
 
     // Auto-archive all completed trackers (Individual cüz or whole groups)
     useEffect(() => {
-        if (!user || juzler.length === 0) return;
+        if (!user || allJuzs.length === 0) return;
 
         const checkAndArchiveCompletedItems = async () => {
             const batch = writeBatch(db);
             let hasChanges = false;
 
-            juzler.forEach(juz => {
+            allJuzs.forEach(juz => {
+                if (juz.isArchived === true) return;
+
                 // If it's a 20-page cüz or custom range, check if all pages are done
                 const isFinished = juz.okunanSayfalar.length >= (juz.toplamSayfa || 20);
-                
-                if (isFinished && !juz.isArchived) {
+
+                if (isFinished) {
                     batch.update(doc(db, 'users', user.uid, 'juzler', juz.id), {
                         isArchived: true,
+                        updatedAt: serverTimestamp(),
                         completedAt: juz.completedAt || serverTimestamp(),
-                        updatedAt: serverTimestamp()
+                        durum: 'tamamlandi'
                     });
                     hasChanges = true;
                 }
@@ -790,16 +795,15 @@ export default function Dashboard() {
             if (hasChanges) {
                 try {
                     await batch.commit();
-                    console.log("Auto-archived finished items.");
                 } catch (e) {
                     console.error("Auto-archive error:", e);
                 }
             }
         };
 
-        const timer = setTimeout(checkAndArchiveCompletedItems, 2000); // Wait for sync
+        const timer = setTimeout(checkAndArchiveCompletedItems, 500); // Shorter delay
         return () => clearTimeout(timer);
-    }, [user, juzler]);
+    }, [user, allJuzs]);
 
     return (
         <div className="max-w-2xl mx-auto space-y-6 pb-24 pt-4 sm:px-4 px-2">
